@@ -40,10 +40,15 @@
             font-weight: 400;
             background-color: var(--ios-bg);
             color: var(--ios-ink);
-            letter-spacing: -0.012em;
-            font-size: 14px;
+            letter-spacing: 0em;
+            line-height: 1.6;
+            font-size: 14.5px;
+            word-break: keep-all;
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
+        }
+        p, li, label, span, div {
+            letter-spacing: 0em;
         }
         .font-medium { font-weight: 500; }
         .font-semibold, .font-bold, b, strong { font-weight: 600; }
@@ -244,8 +249,8 @@
         }
         #mtabs, .fab, #mobile-cal-drawer { display: none; }
 
-        .tt-h { position: absolute; left: 0; width: 40px; text-align: right; font-size: 10px; color: var(--ios-mut); transform: translateY(-6px); }
-        .tt-l { position: absolute; left: 46px; right: 0; border-top: 0.5px solid var(--ios-sep); }
+        .tt-h { position: absolute; left: 0; width: 44px; text-align: right; font-size: 11px; font-weight: 500; color: var(--ios-mut); transform: translateY(-7px); }
+        .tt-l { position: absolute; left: 52px; right: 0; border-top: 0.5px solid var(--ios-sep); }
 
         /* =========================================================
            iPhone (Mobile) vs Mac/iPad (Desktop) Distinct Layouts
@@ -335,24 +340,47 @@
             }
         }
 
-        /* Explicit iPhone Preview Frame on Desktop */
+        /* Explicit iPhone Preview Frame on Desktop & Real Mobile Fixes */
         body.force-desktop #mtabs, body.force-desktop .fab, body.force-desktop #mobile-cal-drawer, body.force-desktop #day-agenda { display: none !important; }
+
+        @media (max-width: 767px) {
+            body:not(.force-desktop) #view-calendar > div > *,
+            body:not(.force-desktop) #view-today > div > *,
+            body:not(.force-desktop) #view-academic > div > *,
+            body:not(.force-desktop) #view-portfolio > div > *,
+            body:not(.force-desktop) #view-dashboard > div > *,
+            body:not(.force-desktop) #sop-subview-roadmap > * {
+                grid-column: 1 / -1 !important;
+                position: static !important;
+                min-width: 0 !important;
+            }
+            body:not(.force-desktop) #cal-legend { display: none !important; }
+            body:not(.force-desktop) #day-agenda:empty { display: none !important; }
+        }
+
         body.force-mobile {
-            max-width: 414px;
+            max-width: 420px;
             margin: 0 auto;
             background: var(--ios-bg);
             box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.2), 0 12px 40px rgba(0, 0, 0, 0.12);
+            overflow-x: hidden;
+        }
+        body.force-mobile header > div {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            height: 50px !important;
         }
         body.force-mobile header nav,
         body.force-mobile header button[onclick="openNewTaskModal()"],
-        body.force-mobile #sync-badge {
+        body.force-mobile #sync-badge,
+        body.force-mobile #cal-legend {
             display: none !important;
         }
         body.force-mobile main {
-            padding-bottom: 104px !important;
+            padding-bottom: 108px !important;
             padding-left: 12px !important;
             padding-right: 12px !important;
-            padding-top: 12px !important;
+            padding-top: 10px !important;
         }
         body.force-mobile #view-calendar > div,
         body.force-mobile #view-today > div,
@@ -360,7 +388,19 @@
         body.force-mobile #view-portfolio > div,
         body.force-mobile #view-dashboard > div,
         body.force-mobile #sop-subview-roadmap {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 12px !important;
+        }
+        body.force-mobile #view-calendar > div > *,
+        body.force-mobile #view-today > div > *,
+        body.force-mobile #view-academic > div > *,
+        body.force-mobile #view-portfolio > div > *,
+        body.force-mobile #view-dashboard > div > *,
+        body.force-mobile #sop-subview-roadmap > * {
+            grid-column: 1 / -1 !important;
+            position: static !important;
+            min-width: 0 !important;
+            width: 100% !important;
         }
         body.force-mobile #view-calendar aside {
             display: none !important;
@@ -369,11 +409,15 @@
         body.force-mobile #day-agenda {
             display: block !important;
         }
+        body.force-mobile #day-agenda:empty,
+        body.force-mobile #mobile-cal-drawer.hidden {
+            display: none !important;
+        }
         body.force-mobile #multi-month-container .mcell {
-            min-height: 54px !important;
-            padding: 6px 2px 4px !important;
+            min-height: 52px !important;
+            padding: 5px 2px 4px !important;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
         body.force-mobile #multi-month-container .mcell > div:first-child {
             justify-content: center;
@@ -386,16 +430,19 @@
         body.force-mobile #multi-month-container .mdots {
             display: flex !important;
         }
+        body.force-mobile #weekly-grid-wrapper {
+            min-width: 560px !important;
+        }
         body.force-mobile #mtabs {
             display: flex !important;
             position: fixed;
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 414px;
+            max-width: 420px;
             bottom: 0;
             z-index: 45;
-            background: rgba(249, 249, 251, 0.92);
+            background: rgba(249, 249, 251, 0.94);
             backdrop-filter: saturate(180%) blur(20px);
             -webkit-backdrop-filter: saturate(180%) blur(20px);
             border-top: 0.5px solid rgba(60, 60, 67, 0.25);
@@ -404,14 +451,14 @@
         body.force-mobile .fab {
             display: flex !important;
             position: fixed;
-            right: max(16px, calc(50% - 190px));
+            right: max(14px, calc(50% - 194px));
             bottom: 72px;
             z-index: 46;
-            width: 50px; height: 50px;
+            width: 48px; height: 48px;
             border-radius: 50%;
             background: var(--ios-blue) !important;
             color: #fff;
-            font-size: 26px;
+            font-size: 25px;
             font-weight: 300;
             align-items: center;
             justify-content: center;
@@ -421,7 +468,7 @@
             align-items: flex-end !important;
         }
         body.force-mobile #note-drawer-backdrop > div {
-            max-width: 414px !important;
+            max-width: 420px !important;
             margin: 0 auto;
             height: 88vh !important;
             border-radius: 22px 22px 0 0 !important;
@@ -447,7 +494,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col text-[13.5px] leading-normal selection:bg-blue-100 selection:text-blue-900">
+<body class="min-h-screen flex flex-col text-[14px] leading-relaxed selection:bg-blue-100 selection:text-blue-900">
 
     <!-- iOS Translucent Top Navigation Bar -->
     <header class="sticky top-0 z-40">
@@ -844,22 +891,48 @@
                     </div>
                 </div>
 
-                <div class="space-y-2 pt-2 border-t border-slate-100">
+                <div class="space-y-2.5 pt-2 border-t border-slate-100">
                     <div class="flex justify-between items-center">
-                        <span class="font-semibold text-slate-700">실시간 자동 동기화 연결 (선택)</span>
-                        <button type="button" onclick="copyGasBridgeCode()" class="text-blue-600 font-medium hover:underline">Google Script Code 복사</button>
+                        <span class="font-semibold text-slate-700">원격 저장소(Firestore) 실시간 연동 상태</span>
+                        <button type="button" onclick="forceCloudSyncNow()" class="chip chip-accent">원격 저장소 즉시 동기화</button>
                     </div>
-                    <div class="flex gap-1.5">
-                        <input type="url" id="gcal-bridge-url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-grow min-w-0 bg-slate-50 rounded-xl px-3 py-1.5 outline-none">
-                        <input type="text" id="gcal-bridge-token" placeholder="비밀 토큰" class="w-24 bg-slate-50 rounded-xl px-2 py-1.5 outline-none">
-                        <button type="button" onclick="syncFromGcalBridge()" class="chip on">지금 동기화</button>
+                    <p id="cloud-sync-status-text" class="text-[11px] text-slate-500 bg-slate-50 rounded-xl px-3 py-2">상태 확인 중...</p>
+                </div>
+
+                <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-slate-800">Google 달력 → 홈페이지 실시간 자동 연동</span>
+                        <button type="button" onclick="copyGasBridgeCode()" class="chip chip-accent">연동 Code 복사</button>
                     </div>
-                    <div class="flex items-center justify-between pt-2">
-                        <label class="chip cursor-pointer">
-                            Google 달력(.ics) 불러오기
-                            <input type="file" id="ics-upload-input" accept=".ics" class="hidden" onchange="importIcsFile(event)">
-                        </label>
-                        <button type="button" onclick="copyScriptableWidgetCode()" class="chip">iPhone Widget Code 복사</button>
+
+                    <div class="bg-blue-50/70 rounded-2xl p-3.5 space-y-1.5 text-[11.5px] text-slate-700 leading-relaxed">
+                        <p class="font-semibold text-blue-800">권한 설정 방법 (둘 중 편한 방법 1가지 선택)</p>
+                        <p><b>방법 A (비공개 달력 여러 개 실시간 연동 · 권장)</b>: 위 <b>[연동 Code 복사]</b> 후 <a href="https://script.google.com" target="_blank" class="text-blue-600 underline font-medium">script.google.com</a>에서 새 Project에 붙여넣고 <b>[배포 → 새 배포 → 유형: 웹 앱]</b>에서 권한을 아래와 같이 주면 Google 달력 자체를 전체 공개하지 않아도 바로 연동됩니다.<br>
+                        · 다음 사용자로 실행: <b>나(본인 계정)</b> / 액세스 권한: <b>모든 사용자(Anyone)</b><br>
+                        · <b>즉시 반영 팁</b>: Apps Script 좌측 <b>트리거(시계 모양)</b>에서 <code>onCalendarChange</code> 함수를 <b>[캘린더에서 → 캘린더 업데이트됨]</b>으로 추가하면 폰에서 일정을 넣자마자 1초 안에 홈페이지에 반영됩니다.</p>
+                        <p><b>방법 B (코드 없이 Google 달력 설정에서 바로 연결)</b>: Google 달력 설정 → 내 캘린더 설정 → <b>[일정 액세스 권한: 공개 사용 설정]</b>을 켜거나 하단 <b>[iCal 형식의 비공개 주소(.ics)]</b>를 복사해 아래 주소 칸에 그대로 붙여넣으세요.</p>
+                    </div>
+
+                    <div class="flex flex-wrap sm:flex-nowrap gap-1.5">
+                        <input type="url" id="gcal-bridge-url" placeholder="Apps Script 웹 앱 주소(.../exec) 또는 iCal(.ics) 주소 붙여넣기" class="flex-grow min-w-0 bg-slate-50 rounded-xl px-3 py-2 text-xs outline-none">
+                        <input type="text" id="gcal-bridge-token" placeholder="토큰(선택)" class="w-24 bg-slate-50 rounded-xl px-2.5 py-2 text-xs outline-none">
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="syncFromGcalBridge()" class="chip on">지금 Google 달력 가져오기</button>
+                            <button type="button" onclick="pushTasksToGcalBridge()" class="chip chip-accent">홈페이지 → Google 내보내기</button>
+                        </div>
+                        <span id="gcal-last-sync-lbl" class="text-[11px] text-slate-400">1분마다 자동 갱신</span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-slate-100">
+                        <div class="flex flex-wrap gap-1.5">
+                            <label class="chip cursor-pointer">
+                                .ics 문서 불러오기
+                                <input type="file" id="ics-upload-input" accept=".ics" class="hidden" onchange="importIcsFile(event)">
+                            </label>
+                            <button type="button" onclick="exportIcsFile()" class="chip">내 일정을 .ics로 저장</button>
+                        </div>
+                        <button type="button" onclick="copyScriptableWidgetCode()" class="chip">iPhone Widget Code</button>
                     </div>
                 </div>
             </div>
@@ -1119,25 +1192,25 @@
                  "절차 ④ System 영향 및 교체성 검토: 유량 저하 영향 사전 검토, 3분 이내 무공구 교체 가능성 확인 및 웹 현황판 교체 알림 연동 구조 정의"
              ],
              "3종 기능성 고분자 매핑 완료, 내부 칸막이·그물망 유로 및 3분 이내 단일동작(One-touch) Slide 교체 개념 확정",
-             "사용자가 물에 손을 깊이 넣거나 공구를 쓰지 않고 상단에서 단일동작(One-touch)로 Cartridge만 뽑아 3분 안에 교체할 수 있는 미끄럼 구조 채택.",
+             "사용자가 물에 손을 깊이 넣거나 공구를 쓰지 않고 상단에서 단일동작(One-touch)으로 Cartridge만 뽑아 3분 안에 교체할 수 있는 미끄럼 구조 채택.",
              "done", "2026-10-17"],
 
-            [5, "System 운용 방식 및 4대 운전 운전 단계 설계",
-             "System 운용 흐름도, 물 순환 순환 주기 정의서, 유지보수 절차서, 운전 기준서", 1.5,
+            [5, "System 운용 방식 및 4대 운전 단계 설계",
+             "System 운용 흐름도, 물 순환 주기 정의서, 유지보수 절차서, 운전 기준서", 1.5,
              [
-                 "절차 ① 물 순환 순환 주기 정의: 수조 유입 → 2단 물리여과(거친·미세 여과망) → 저유속 생물여과(체류시간 확보) → 다공성·이온교환 고분자 처리 → 산소 공급 복귀 확정",
+                 "절차 ① 물 순환 주기 정의: 수조 유입 → 2단 물리여과(거친·미세 여과망) → 저유속 생물여과(체류시간 확보) → 다공성·이온교환 고분자 처리 → 산소 공급 복귀 확정",
                  "절차 ② 산소 공급 및 여과 운용 방식: 주 산소 공급원으로 Venturi 공기 흡입기를 적용하고 정전·비상 대비 산소 공급 Gel 보조 방안 마련",
                  "절차 ③ 감지기 기반 유지보수 주기 자동화: 물리여과망 및 Cartridge 전후 유속 감지기로 막힘을 감지해 교체·청소 알림을 출력하는 절차 수립",
-                 "절차 ④ 4대 운전 운전 단계 확립: 정상 운전(24h Pump 가동), 자동급여 운전(사료 투입 시 Pump 일시 정지), 유지보수 운전(Pump·Heater 전원 차단), 비상 운전(누전·이상 시 즉시 차단 및 경보음)"
+                 "절차 ④ 4대 운전 단계 확립: 정상 운전(24h Pump 가동), 자동급여 운전(사료 투입 시 Pump 일시 정지), 유지보수 운전(Pump·Heater 전원 차단), 비상 운전(누전·이상 시 즉시 차단 및 경보음)"
              ],
-             "산소·여과 운용 순서, 유속 감지기 기반 유지보수 절차, 4대 운전 운전 단계(정상·급여·유지보수·비상) 기준서 완성",
+             "산소·여과 운용 순서, 유속 감지기 기반 유지보수 절차, 4대 운전 단계(정상·급여·유지보수·비상) 기준서 완성",
              "자동급여 시 순환 수류에 의해 사료가 여과기로 바로 빨려 들어가는 문제를 막기 위해 급여 시 Pump를 일시 정지하는 연동 로직을 표준화함.",
              "done", "2026-10-18"],
 
             [6, "자동제어 System 기능 및 감지기(Sensor) 배치 설계",
              "제어 기능 구성도, 4종 감지기 배치도, 제어 논리 순서도(Flowchart), 기능 명세서", 2.0,
              [
-                 "절차 ① 4대 제어·수집 대상 구성: 순환 Pump 제어, 자동급여·Pump 연계 제어, 감지기 측정값 디지털 잡음제거 수집, 실시간 상태 실시간 감시 정의",
+                 "절차 ① 4대 제어·수집 대상 구성: 순환 Pump 제어, 자동급여·Pump 연계 제어, 감지기 측정값 디지털 잡음제거 수집, 실시간 상태 감시 정의",
                  "절차 ② 4종 감지기 설치 위치 확정: pH 감지기(3실 Cartridge 직후), 수온 감지기(주 Module 외부 수조 독립 설치), 수위 감지기, 여과기 전후 유속 감지기 1·2 배치",
                  "절차 ③ 상태별 구동 논리(Logic) 설계: 시작(정상 상태 점검 후 가동) → 정상(24h 운전) → 급여(Pump 5분 정지 여유) → 이상 감지(경보음 출력) → 비상 정지(수위·pH 이상 시 즉시 동작)",
                  "절차 ④ Module 간 신호 연동 구성: 순환 Module, 고분자 Cartridge(교체 알림), 자동급여기, 감지기 자동 기록 자료 간 입출력 연결 구조 정의"
@@ -1192,28 +1265,28 @@
                  "절차 ④ 주 외함 외형 및 설치 구조 3D 설계: 방수 구조 벽 두께 최소 3.6mm(권장 3~4mm 이상), 침수형·벽면 걸이형 겸용 수조 거치 연결 구조, Pump 진동 저감 안착대 설계"
              ],
              "150×100×200mm 규격 내 4대 격실 구획, 1.5mm 생물 보호 슬릿, 벽 두께 3.6mm 주 외함 3D CAD 완성",
-             "침수형과 걸이형 모두 장착 가능하도록 외함 배면에 탈착식 거치대 안내 홈을 일체화하고, 모든 내부 격벽 모서리에 모서리 둥글리기을 주어 사수 구역을 없앰.",
+             "침수형과 걸이형 모두 장착 가능하도록 외함 배면에 탈착식 거치대 안내 홈을 일체화하고, 모든 내부 격벽 모서리에 모서리 둥글리기를 주어 사수 구역을 없앰.",
              "todo", "2026-11-06"],
 
             [11, "O-ring 수밀 홈(Sealing Groove), 열삽입 체결 체결 기둥 및 Slide Rail 설계 2",
-             "O-ring 밀폐 홈·덮개 3D 모델, 열삽입 열삽입 체결 기둥 상세도, Cartridge Slide Rail 모델, 수밀 구조 사양서", 2.0,
+             "O-ring 밀폐 홈·덮개 3D 모델, 열삽입 체결 기둥 상세도, Cartridge Slide Rail 모델, 수밀 구조 사양서", 2.0,
              [
                  "절차 ① O-ring 밀폐 홈 변수 기반 설계: NBR O-ring(단면 두께 CS 2.4mm) 기준 압착률 20~23% 확보를 위해 홈 깊이(H_g) 1.85mm, 홈 폭(W_g) 3.10mm, 코너 반경 R0.5mm 설계",
-                 "절차 ② 열삽입 열삽입 Nut 체결 기둥 설계: M3×12mm SUS304 Bolt 체결 및 열박음 시 균열 방지를 위해 M3 황동 열삽입 Nut용 체결 기둥(내경 4.0mm, 외경 8.0mm, Bolt 간격 40mm 이하) 배치",
+                 "절차 ② 열삽입 Nut 체결 기둥 설계: M3×12mm SUS304 Bolt 체결 및 열박음 시 균열 방지를 위해 M3 황동 열삽입 Nut용 체결 기둥(내경 4.0mm, 외경 8.0mm, Bolt 간격 40mm 이하) 배치",
                  "절차 ③ Cartridge 단일동작(One-touch) Slide Rail 연결 구조 설계: 무공구 탈부착을 위한 양측 Slide Rail 홈(조립 공차 0.30mm), 상단 단일동작(One-touch) 걸쇠(Latch) 고정턱 및 상부 인출 공간 확보",
                  "절차 ④ FDM 방수 출력 구조 강성 검토: 수압 및 Bolt 체결력에 의한 테두리 휨 변형을 막기 위해 덮개 테두리 두께 4.5mm 및 외벽 두께 3.6mm 이상 유지 검증"
              ],
-             "NBR CS 2.4mm 기준 홈(깊이 1.85×폭 3.1mm), M3 열삽입 체결 기둥, 공차 0.3mm Slide Rail 3D 3D 설계 완료",
-             "3D 3D 출력 표면의 적층 결을 따라 발생하는 미세 누수를 차단하기 위해 O-ring 압착률을 표준(15%)보다 약간 높은 22%(깊이 1.85mm)로 설계함.",
+             "NBR CS 2.4mm 기준 홈(깊이 1.85×폭 3.1mm), M3 열삽입 체결 기둥, 공차 0.3mm Slide Rail 3D 설계 완료",
+             "3D 출력 표면의 적층 결을 따라 발생하는 미세 누수를 차단하기 위해 O-ring 압착률을 표준(15%)보다 약간 높은 22%(깊이 1.85mm)로 설계함.",
              "todo", "2026-11-07"],
 
             [12, "주 순환 Module 전체 3D Assembly 조립 및 간섭 검사(Clash Detection)",
              "통합 순환 Module 3D Assembly 문서, 간섭 검사(Clash Detection) 보고서, 분해도 및 조립 순서도, 수조 거치 상세도", 2.0,
              [
-                 "절차 ① 전체 부품 3D CAD 통합 조립: 주 외함 기초 + PC 수랭 Pump + 내부 규소 배관 + Venturi·Nozzle Tip + NBR O-ring + 상부 덮개 + 4주차 Cartridge 외형 모형(Dummy)(Dummy) 구속 조립",
-                 "절차 ② 3D 자동 간섭 검사(Clash Detection): 덮개-O-ring 홈, Pump 외형-외함 내벽, 내부 배관-격벽, M3 Bolt 구멍-열삽입 열삽입 체결 기둥 간 중심축 정렬 및 체적 중첩 전수 검사",
+                 "절차 ① 전체 부품 3D CAD 통합 조립: 주 외함 기초 + PC 수랭 Pump + 내부 규소 배관 + Venturi·Nozzle Tip + NBR O-ring + 상부 덮개 + 4주차 Cartridge 외형 모형(Dummy) 구속 조립",
+                 "절차 ② 3D 자동 간섭 검사(Clash Detection): 덮개-O-ring 홈, Pump 외형-외함 내벽, 내부 배관-격벽, M3 Bolt 구멍-열삽입 체결 기둥 간 중심축 정렬 및 체적 중첩 전수 검사",
                  "절차 ③ 조립성 및 유지보수 인체공학 검토: 육각 렌치 공구 접근 여유 공간, G 1/4인치 Barb 연결구 체결 작업성, Cartridge 수직 탈착 경로 및 Pump 교체 용이성 평가",
-                 "절차 ④ 수조 거치 거치대 및 하중 검토: 300×300×300mm 수조 유리벽(두께 5~6mm, 운용 수심 260~280mm) 체결 시 만수 상태 Module 하중 지지 안정성 및 무게중심 확인"
+                 "절차 ④ 수조 거치대 및 하중 검토: 300×300×300mm 수조 유리벽(두께 5~6mm, 운용 수심 260~280mm) 체결 시 만수 상태 Module 하중 지지 안정성 및 무게중심 확인"
              ],
              "통합 3D Assembly 조립 완료, 의도치 않은 부품 간 간섭 0건 달성, 배관 곡률 및 공구 접근성 검증 완료",
              "4주차에 상세 설계할 고분자 Cartridge의 외형 모형(Dummy) 모델을 미리 어셈블리에 결합해 봄으로써 Module 간 연결 구조 충돌을 사전에 차단함.",
@@ -1222,7 +1295,7 @@
             [13, "간섭부 도면 공차 보정 및 방수 3D 출력(STL·Slicing) 준비",
              "공차 보정 완료 기준 3D 모델, 방수 단면분할 설정문서(.3mf), 출력용 STL 묶음, 출력 시간·소재 산출표", 1.5,
              [
-                 "절차 ① CAD 공차 및 형상 최종 보정: Cartridge Slide 결합 유격(0.30mm), O-ring 홈 깊이(1.85mm) 및 모서리 모서리 둥글리기, M3 체결 홀 공차(Ø3.4mm), 최소 벽 두께(≥3.6mm) 최종 확인",
+                 "절차 ① CAD 공차 및 형상 최종 보정: Cartridge Slide 결합 유격(0.30mm), O-ring 홈 깊이(1.85mm) 및 모서리 둥글리기, M3 체결 홀 공차(Ø3.4mm), 최소 벽 두께(≥3.6mm) 최종 확인",
                  "절차 ② 부품별 적층 방향(Build Orientation) 및 지지대 전략: O-ring 밀폐 홈 내부에 지지대(Support)가 절대 생성되지 않도록 주 외함과 덮개의 바닥면 기준 출력 방향 최적화",
                  "절차 ③ 방수 FDM 단면분할(Slicing) 조건 확정: PETG 소재, 벽 두께 3.6mm(9 Walls), 채움율 40%, 적층 높이 0.16mm, 압출 유량(Flow Rate) 104%, Nozzle 온도 240℃ 설정",
                  "절차 ④ STL 변환 및 그물망(Mesh) 무결성 검사: 고정밀 이진 STL 문서 내보내기 후 비다양체(Non-manifold) 모서리 0건, 치수 스케일 1:1 동기화 및 표준 문서명 정리"
@@ -1261,7 +1334,7 @@
              [
                  "절차 ① Venturi Injector 본체 및 탈착식 Nozzle Tip 3종(목 내경 2.8mm / 3.2mm / 3.6mm) 고해상도(적층 0.12mm) 정밀 출력",
                  "절차 ② 내부 유로 후가공: 지지대 제거 후 축소관(21°)-목(Throat)-확대관(7°) 내부 표면을 미세 줄·사포(400~800방)로 매끄럽게 연마하여 유동 마찰 손실 최소화",
-                 "절차 ③ 나사산 및 홀 정밀 가공: 입·출수부 G 1/4인치 암나사 화면(Tap) 후가공 정리 및 공기 흡입 연결구(내경 4.0mm) 관통 상태 확인",
+                 "절차 ③ 나사산 및 홀 정밀 가공: 입·출수부 G 1/4인치 암나사산(Tap) 후가공 정리 및 공기 흡입 연결구(내경 4.0mm) 관통 상태 확인",
                  "절차 ④ 핵심 치수 정밀 실측: 정밀 자·구멍 게이지 활용 Nozzle Tip 3종의 목(Throat) 내경(목표 ±0.1mm 이내) 및 외함 열삽입 체결 기둥 내경(4.0mm) 실측 기록"
              ],
              "Nozzle Tip 3종 목 내경 공차 ±0.1mm 이내 확인, 내부 유로 막힘·거스러미 0건 및 G 1/4인치 연결구 나사 결합 양호",
@@ -1271,10 +1344,10 @@
             [17, "주 순환 Module 1차 시제품(Prototype) 조립 및 기구 결합 확인",
              "조립 완료된 주 순환 Module 1차 시제품(Prototype), 조립성 및 유격 점검표", 2.5,
              [
-                 "절차 ① 열삽입 열삽입 Nut 압입 및 O-ring 안착: 납땜 인두기(220℃)를 이용해 외함 테두리 체결 기둥에 M3 황동 열삽입 Nut를 수직 압입하고 NBR O-ring(CS 2.4mm)을 홈에 안착",
+                 "절차 ① 열삽입 Nut 압입 및 O-ring 안착: 납땜 인두기(220℃)를 이용해 외함 테두리 체결 기둥에 M3 황동 열삽입 Nut를 수직 압입하고 NBR O-ring(CS 2.4mm)을 홈에 안착",
                  "절차 ② Pump·연결구·배관 체결: PC 수랭 Pump(12V)를 진동 방지대에 고정하고 G 1/4인치 to 8mm Barb 연결구(밀폐 테이프 밀폐) 및 내경 8mm 연질 규소관·배관 고정구 체결",
-                 "절차 ③ 여과재 및 Cartridge 모형(Dummy) 결합 시험: 1실 물리여과 여과재, 2실 생물여과 담체 안착 후 3실 Slide Rail에 Cartridge 외형 모형(Dummy)를 넣어 Slide 삽입·분리감 점검",
-                 "절차 ④ 상부 덮개 M3×12mm SUS304 Bolt 대각선 균등 체결 및 수조 거치 거치대 장착 상태 확인"
+                 "절차 ③ 여과재 및 Cartridge 모형(Dummy) 결합 시험: 1실 물리여과 여과재, 2실 생물여과 담체 안착 후 3실 Slide Rail에 Cartridge 외형 모형(Dummy)을 넣어 Slide 삽입·분리감 점검",
+                 "절차 ④ 상부 덮개 M3×12mm SUS304 Bolt 대각선 균등 체결 및 수조 거치대 장착 상태 확인"
              ],
              "모든 M3 체결부 공구 접근 및 대각 체결 원활, 내부 배관 꺾임 0건, Cartridge 모형(Dummy) Slide 탈부착 원활",
              "Bolt 체결 시 한쪽이 들떠 누수가 생기지 않도록 대각선 순서로 균등하게 조여 O-ring이 전 구간 균일하게 압착되도록 조립함.",
@@ -1297,7 +1370,7 @@
              [
                  "절차 ① Nozzle Tip 3종(목 내경 2.8 / 3.2 / 3.6mm) 교체 비교 시험: 각 끝단(Tip) 장착 시 공기 흡입 유량, 발생 기포의 미세도·분산 거리 및 토출 유량 감소폭 측정",
                  "절차 ② 수조 내 대류 및 사수 구역 확인: 수면 교반을 통한 가스 교환 상태와 수조 바닥 모서리까지 순환 수류가 도달하여 침전물이 하단 유입구로 유도되는지 추적자 확인",
-                 "절차 ③ 역류방지 역류방지 Valve 및 소음 검증: Pump 전원을 급격히 차단했을 때 공기 흡입관(내경 4mm)을 통해 수조 물이 외부로 역류하지 않는지 5회 반복 점검",
+                 "절차 ③ 역류방지 Valve 및 소음 검증: Pump 전원을 급격히 차단했을 때 공기 흡입관(내경 4mm)을 통해 수조 물이 외부로 역류하지 않는지 5회 반복 점검",
                  "절차 ④ 유량 유지와 용존산소 공급 효율이 가장 균형 잡힌 최적 Nozzle Tip 1종 최종 선정"
              ],
              "최적 Nozzle Tip 1종 확정(미세 기포 연속 토출 및 유량 ≥100 L/h 동시 만족), 전원 차단 시 공기배관 역류 0건",
@@ -1325,7 +1398,7 @@
                  "절차 ④ 3주차 완료 기준 달성 확인 및 주 순환 Module 실물 장치 최종 동결(Hardware Freeze)"
              ],
              "24시간 연속 가동 누수 0건·목표 유량 및 산소 공급 성능 100% 만족, 주 순환 Module 최종 확정 및 질화균 배양 착수",
-             "3주차 완료 기준 달성. 질화 박테리아 군집 형성에는 최소 2~3주가 걸리므로 3주차 말부터 생물여과 담체 순환 배양을 미리 시작해 7주차 생물 투입 시 암모니아 급격한 충격를 방지함.",
+             "3주차 완료 기준 달성. 질화 박테리아 군집 형성에는 최소 2~3주가 걸리므로 3주차 말부터 생물여과 담체 순환 배양을 미리 시작해 7주차 생물 투입 시 암모니아 급격한 충격을 방지함.",
              "todo", "2026-11-18"],
 
             // ==================== 4주차: 기능성 고분자 Cartridge 상세 설계 (DAY 22 ~ 28) ====================
@@ -1342,21 +1415,21 @@
              "todo", "2026-11-19"],
 
             [23, "Cartridge 내부 다단 유로(Baffle) 및 250µm 미세 그물망(Mesh) 구조 설계",
-             "Cartridge 내부 유로 3D CAD 모델, 250µm 그물망 고정 고정 틀 도면, 유속·체류시간 검토서", 2.5,
+             "Cartridge 내부 유로 3D CAD 모델, 250µm 그물망 고정 틀 도면, 유속·체류시간 검토서", 2.5,
              [
                  "절차 ① 체류 시간 극대화 내부 유로 설계: 물이 수지층 일부만 스쳐 지나가는 편류(Channeling)를 막기 위해 상하 교차형 3단 지그재그 격벽(Baffle, 코너 R2.0mm) 유로 설계",
-                 "절차 ② 250µm(60 Mesh) 미세 그물망 전면 적용 구조 설계: 직경 0.4~1.2mm 기능성 고분자 입자(Bead)(Bead) 유실 방지 및 어류 유입 차단을 위해 입·출수구와 격벽 통수창 전체에 250µm 나일론/SUS316 그물망(Mesh)망 이중 끼움 홈 설계",
+                 "절차 ② 250µm(60 Mesh) 미세 그물망 전면 적용 구조 설계: 직경 0.4~1.2mm 기능성 고분자 입자(Bead) 유실 방지 및 어류 유입 차단을 위해 입·출수구와 격벽 통수창 전체에 250µm 나일론/SUS316 그물망(Mesh) 이중 끼움 홈 설계",
                  "절차 ③ 3종 수지 충전 격실 분리 구획: 1구획(양이온 교환 수지) → 2구획(음이온 교환 수지) → 3구획(다공성 고분자 수지)을 독립 칸막이로 구획하여 수지 혼합 방지 및 개별 재생·교체 지원",
                  "절차 ④ 유로 단면적 및 압력 손실 검토: 250µm 그물망 개구율(약 45%)을 반영한 유효 통수 단면적 계산 및 수지층 통과 유속 검증"
              ],
-             "3단 지그재그 격벽 유로 및 전 구간 250µm 그물망 고정 구조 3D 3D 설계 완료, 수지 입자(Bead) 유실 0% 구조 확보",
+             "3단 지그재그 격벽 유로 및 전 구간 250µm 그물망 고정 구조 3D 설계 완료, 수지 입자(Bead) 유실 0% 구조 확보",
              "사전결정안 S-18의 250µm(60 Mesh) 규격을 적용하여 가장 작은 이온교환 수지 입자(Bead)(0.4mm)도 절대 수조로 빠져나가지 못하도록 이중 그물망(Mesh) 고정 틀을 설계함.",
              "todo", "2026-11-20"],
 
             [24, "무공구 단일동작(One-touch) 교체 기구 및 Slide Rail 상세 설계",
              "Slide Rail 및 단일동작 걸쇠(Latch) 3D 모델, 탈부착 공차 설계도, 3분 교체 작업성 검토서", 2.5,
              [
-                 "절차 ① 미끄럼 안내 안내 홈(Slide Guide Rail) 설계: 주 순환 Module 장착 홈 홈과 맞물리는 양측 T형 Slide Rail(조립 유격 0.30mm, 하단 진입 유도 모따기 C2.0mm) 설계",
+                 "절차 ① 미끄럼 안내 홈(Slide Guide Rail) 설계: 주 순환 Module 장착 홈과 맞물리는 양측 T형 Slide Rail(조립 유격 0.30mm, 하단 진입 유도 모따기 C2.0mm) 설계",
                  "절차 ② 단일동작 걸쇠(One-touch Snap Latch) 설계: 별도 공구 없이 상단에서 손가락으로 눌러 잠그고 해제하는 탄성 외팔보 걸쇠(걸림턱 2.0mm, 미끄럼 방지 돌기 적용) 기구 설계",
                  "절차 ③ 상부 인출 손잡이 및 유지보수 공간 설계: 수조 상단 여유 공간에서 한 손으로 잡고 수직 인출할 수 있는 접이식/일체형 손잡이 및 교체 시 내부 물 빠짐 배수 슬릿 설계",
                  "절차 ④ 교체 시 오염수 역류 방지 단턱 설계: Cartridge를 위로 뽑아 올릴 때 내부에 포집된 부유물이 수조로 쏟아지지 않도록 입·출수 연결구 위치 및 하단 물받이 단턱 배치"
@@ -1366,14 +1439,14 @@
              "todo", "2026-11-21"],
 
             [25, "감지기 장착부(Sensor Mount) 및 고분자 수지 충전·배출 구조 설계",
-             "Sensor 장착부 일체형 격실 3D 모델, PG13.5 방수 방수 마개 체결도, 수지 충전 마개 상세도", 2.0,
+             "Sensor 장착부 일체형 격실 3D 모델, PG13.5 방수 마개 체결도, 수지 충전 마개 상세도", 2.0,
              [
                  "절차 ① pH 감지기 방수 장착부 설계: 기포 간섭을 피하기 위해 Cartridge 정화 직후·Venturi 진입 이전 유로(사전결정안 S-20)에 외경 12mm pH 측정 전극용 PG13.5 나사산·O-ring 장착부 설계",
                  "절차 ② 전·후단 유속 감지기 장착부 설계: Cartridge 막힘 및 교체 주기 자동 판별(1주차 DAY 5 절차 ③)을 위한 입·출구 유속 감지기(G 1/4인치 연결) 장착부 설계",
                  "절차 ③ 3구획 개별 수지 충전·배출 마개 설계: 각 수지 격실 상단에 구경 22mm 나사식 충전 마개(규소 밀폐재 적용)를 두어 고분자 입자(Bead) 충전 및 사용 후 배출·세척이 용이하도록 설계",
                  "절차 ④ 수온 감지기(외경 6mm) 및 외벽 비접촉 수위 감지기 고정용 상부 고정구 거치대(유리 두께 5~6mm 대응, S-21) 설계"
              ],
-             "Cartridge 직후(Venturi 이전) pH·유속 감지기 방수 장착부 및 3구획 개별 수지 충전 마개 3D 3D 설계 완료",
+             "Cartridge 직후(Venturi 이전) pH·유속 감지기 방수 장착부 및 3구획 개별 수지 충전 마개 3D 설계 완료",
              "사전결정안 S-19~S-21의 감지기 규격(pH OD 12mm, 수온 OD 6mm, 비접촉 수위감지기)과 장착부 위치(Venturi 이전 무기포 구간)를 3D CAD에 정확히 반영함.",
              "todo", "2026-11-22"],
 
@@ -1406,7 +1479,7 @@
              [
                  "절차 ① 주 순환 Module-Cartridge 결합부 공차 정합성 및 입·출수 유로 연결 상태 최종 도면 검토",
                  "절차 ② 1주차 Cartridge 설계 요구사항(3종 오염물 흡착, 250µm 유실 방지, 무공구 3분 교체, 감지기 연동) 충족 여부 전수 확인",
-                 "절차 ③ 5주차 제작·실험 준비물 점검: PETG 출력 소재, 250µm 그물망(Mesh)망, 3종 고분자 수지(양이온·음이온·다공성), 암모니아·질산염·인산염 표준 시약 및 수질 측정 키트 확인",
+                 "절차 ③ 5주차 제작·실험 준비물 점검: PETG 출력 소재, 250µm 그물망(Mesh), 3종 고분자 수지(양이온·음이온·다공성), 암모니아·질산염·인산염 표준 시약 및 수질 측정 키트 확인",
                  "절차 ④ 4주차 Cartridge 설계 기준 잠금(Baseline Freeze) 및 5주차 제작·검증 착수 승인"
              ],
              "4주차 완료 기준(기능성 고분자 Cartridge 설계 완료) 달성, 주 Module 정합성 확인 및 5주차 착수 승인",
@@ -1502,7 +1575,7 @@
             [36, "pH·수온·수위·유속 4종 감지기(Sensor) MCU 연결 및 영점 보정",
              "4종 감지기 영점 보정(Calibration) 자료 기록표, 신호 노이즈 제거 디지털 잡음제거 Code", 2.5,
              [
-                 "절차 ① pH 감지기 3점 정밀 보정: pH 표준 완충용액(pH 4.01, 6.86, 9.18)에 측정 전극를 침지하여 출력 전압(mV)을 측정하고 1차 선형 회귀 보정식(온도 보상 포함)을 MCU에 입력",
+                 "절차 ① pH 감지기 3점 정밀 보정: pH 표준 완충용액(pH 4.01, 6.86, 9.18)에 측정 전극을 침지하여 출력 전압(mV)을 측정하고 1차 선형 회귀 보정식(온도 보상 포함)을 MCU에 입력",
                  "절차 ② 수온 감지기 오차 보정: 방수형 디지털 수온 감지기(DS18B20)를 정밀 기준 온도계와 함께 항온수(20℃, 25℃, 30℃)에 넣어 오차가 ±0.3℃ 이내가 되도록 보정 계수 설정",
                  "절차 ③ 수위 및 유속 감지기 보정: 수조 외벽 비접촉 수위 감지기(하한 260mm 임계점) 감도 조정 및 Hall 유속 감지기 펄스 주파수(Hz)-유량(L/h) 환산 계수 보정",
                  "절차 ④ 신호 안정화 여과기 구현: 수중 Pump 구동 노이즈와 미세 기포에 의한 측정값 흔들림을 제거하기 위해 이동평균(Moving Average, 20표본) 및 이상치 제거 알고리즘 적용"
@@ -1524,7 +1597,7 @@
              "todo", "2026-12-04"],
 
             [38, "MCU 통합 회로 구성, 전원 분리 및 방수·절연 배선 정리",
-             "통합 제어 회로도(Schematic), 방수 제어함 실물 실물 장치, 전원·절연 안전 점검 기록", 2.5,
+             "통합 제어 회로도(Schematic), 방수 제어함 실물 장치, 전원·절연 안전 점검 기록", 2.5,
              [
                  "절차 ① 전체 전자 회로 구성: MCU(ESP32/Arduino), 4종 감지기 신호 변환 보드, 계전기/MOSFET 구동 회로, 경고 경보기, 상태 표시 LED, 유지보수 푸시 단추를 기판에 통합 결선",
                  "절차 ② 전원 분리 및 보호 회로 적용: 12V 고전류 구동 전원(Pump·연동Pump)과 5V/3.3V 정밀 제어 전원(MCU·감지기)을 분리하고 역전압 방지 다이오드 및 과전류 퓨즈 장착",
@@ -1535,27 +1608,27 @@
              "수조 환경에서 가장 위험한 누전 및 연결부 부식을 막기 위해 방수 등급 외함과 전선 드립 고리(물이 전선을 타고 흘러내리는 것을 방지하는 U자 굴곡)를 적용함.",
              "todo", "2026-12-05"],
 
-            [39, "4대 운전 운전 단계 자동제어 제어 Code(Firmware)(Firmware) 작성 및 모의 검증",
-             "자동제어 통합 Firmware 소스 Code, 4대 운전 운전 단계 상태 전이표, 모의 이상 신호 시험 기록", 3.0,
+            [39, "4대 운전 단계 자동제어 제어 Code(Firmware) 작성 및 모의 검증",
+             "자동제어 통합 Firmware 소스 Code, 4대 운전 단계 상태 전이표, 모의 이상 신호 시험 기록", 3.0,
              [
-                 "절차 ① 4대 운전 운전 단계 상태 기계(FSM) 코딩: ① 정상 운전(24h 순환·자동 수온/pH 통제) ② 자동급여 운전(정시 급여 + Pump 5분 정지) ③ 유지보수 운전(단추 입력 시 Pump·Heater 안전 정지) ④ 비상 운전(이상 감지 시 즉시 차단·경보)",
+                 "절차 ① 4대 운전 단계 상태 기계(FSM) 코딩: ① 정상 운전(24h 순환·자동 수온/pH 통제) ② 자동급여 운전(정시 급여 + Pump 5분 정지) ③ 유지보수 운전(단추 입력 시 Pump·Heater 안전 정지) ④ 비상 운전(이상 감지 시 즉시 차단·경보)",
                  "절차 ② 수온·pH·수위 폐고리 제어 알고리즘 구현: 수온 이력 제어(24.5~25.5℃ 유지), pH 하한(<6.6) 시 완충제 정량Pump 1회 주입 후 30분 대기 안전 잠금, 수위 하한(<260mm) 감지 알림 구현",
                  "절차 ③ Cartridge 교체 주기 자동 판정 로직 구현: 전후 유속 감지기 측정 유량이 임계값(≤75 L/h)으로 떨어지거나 누적 운전 시간이 설정 주기에 도달하면 교체 알림 LED·웹 경고 활성화",
                  "절차 ④ 4대 운전 단계 모의 신호 인가 시험: 감지기 입력에 정상·고온·저수위·pH 급변·유량 저하 모의 신호를 차례로 주어 모든 상태 전이와 경보음이 설계대로 동작하는지 검증"
              ],
-             "정상·급여·유지보수·비상 4종 운전 운전 단계 모의 시험 100% 통과, 이상 감지 시 1초 이내 경보 및 안전 안전 잠금 작동 확인",
-             "pH 완충제가 한꺼번에 과투입되어 생물이 급격한 충격를 받는 일을 막기 위해 1회 최소량 주입 후 수조 전체가 섞일 때까지 30분간 추가 주입을 금지하는 안전 안전 잠금을 넣음.",
+             "정상·급여·유지보수·비상 4종 운전 단계 모의 시험 100% 통과, 이상 감지 시 1초 이내 경보 및 안전 잠금 작동 확인",
+             "pH 완충제가 한꺼번에 과투입되어 생물이 급격한 충격을 받는 일을 막기 위해 1회 최소량 주입 후 수조 전체가 섞일 때까지 30분간 추가 주입을 금지하는 안전 잠금을 넣음.",
              "todo", "2026-12-06"],
 
             [40, "수질·유량 실시간 자동 기록(Data Logging) 및 실시간 감시 연동 구현",
-             "수질·유량 자동 자동 기록 Code, CSV/JSON 자료 기록 문서 표본, 24시간 자동 기록 무결성 검증 기록", 2.0,
+             "수질·유량 자동 기록 Code, CSV/JSON 자료 기록 문서 표본, 24시간 자동 기록 무결성 검증 기록", 2.0,
              [
-                 "절차 ① 정주기 자동 기록(Logging) 구현: 시각(Timestamp), 수온(℃), pH, 수위 상태, 순환 유량(L/h), 운전 모드, Cartridge 잔여 수명(%)을 5분 주기로 SD 항목 및 직렬/원격 저장소 DB에 CSV·JSON 저장",
+                 "절차 ① 정주기 자동 기록(Logging) 구현: 시각(Timestamp), 수온(℃), pH, 수위 상태, 순환 유량(L/h), 운전 모드, Cartridge 잔여 수명(%)을 5분 주기로 SD 기억장치 및 직렬/원격 저장소 DB에 CSV·JSON 저장",
                  "절차 ② 직관적 실시간 감시 화면 연동: 웹 현황판/상태창에서 실시간 수질 수치, Heater·Pump 작동 상태, 마지막 급여 시각, Cartridge 교체 잔여 일수를 한눈에 확인하도록 연동",
                  "절차 ③ 통신 장애 복구 및 Watchdog 적용: 일시적 통신망/전원 순단 시에도 내부 저장소에 기록을 유지하고 MCU가 멈추지 않도록 실물 장치 Watchdog Timer 활성화",
-                 "절차 ④ 24시간 연속 자동 기록 무결성 시험: 24시간 동안 5분 간격으로 총 288건의 수질 기록가 기록 시각 누락이나 형식 깨짐 없이 연속 저장되는지 확인"
+                 "절차 ④ 24시간 연속 자동 기록 무결성 시험: 24시간 동안 5분 간격으로 총 288건의 수질 기록이 기록 시각 누락이나 형식 깨짐 없이 연속 저장되는지 확인"
              ],
-             "24시간 연속 자동 자동 기록 누락 0건(288/288건 저장 성공), 실시간 수질 및 Cartridge 교체 알림 화면 정상 동작",
+             "24시간 연속 자동 기록 누락 0건(288/288건 저장 성공), 실시간 수질 및 Cartridge 교체 알림 화면 정상 동작",
              "7주차 장기 연속 운전 자료와 8주차 Portfolio 도표를 자동으로 추출할 수 있도록 표준 CSV 형식(시각, 수온, pH, 유량, 수위, 상태)으로 로거를 규격화함.",
              "todo", "2026-12-07"],
 
@@ -1599,7 +1672,7 @@
             [44, "실제 생물 투입 및 초기 24시간 생체 반응·수질 변화 집중 관찰",
              "생물 투입 초기 24시간 수질·유량 실시간 감시 기록지, 생물 적응 및 유입구 안전 점검표", 2.0,
              [
-                 "절차 ① 온도·수질 물맞댐 및 생물 점진 투입: 30분간 수조 물과 단계적으로 혼합(물맞댐)하여 온도·pH 급격한 충격를 예방한 뒤 시험 어류 개체를 수조에 투입",
+                 "절차 ① 온도·수질 물맞댐 및 생물 점진 투입: 30분간 수조 물과 단계적으로 혼합(물맞댐)하여 온도·pH 급격한 충격을 예방한 뒤 시험 어류 개체를 수조에 투입",
                  "절차 ② 초기 24시간 집중 실시간 감시: 투입 후 0h, 4h, 8h, 12h, 18h, 24h 간격으로 암모니아·아질산·pH·수온·유량을 기록하고 어류의 호흡 수, 유영 활동성, 생체 부담 징후 관찰",
                  "절차 ③ 기계적 안전 요구사항 실증: 유입구 생물 보호 슬릿(폭 1.5mm) 및 Cartridge 250µm 그물망(Mesh)에 의해 어류가 Pump나 Cartridge 내부로 유입되지 않는지(1주차 안전 요구사항 1번) 확인",
                  "절차 ④ 초기 급여 반응 확인: 자동급여 동작 시 어류의 사료 섭취 속도를 관찰하고 먹이 찌꺼기가 남지 않도록 1회 급여량을 미세 조정"
@@ -1641,7 +1714,7 @@
                  "절차 ④ 문제해결 DB(Troubleshooting Log) 등록 및 V2 보정 과제 확정: 도출된 문제별 근본 원인과 실물 장치·Firmware 개선 방안을 매핑"
              ],
              "72시간 자동 기록 자료 통계·시각화 분석 완료, 감지기 영점 편차 및 기구적 미세 결함 원인·해결책 전수 도출",
-             "장기 운전 기록를 분석하여 단기 시험에서는 보이지 않던 감지기 영점 미세 이동과 급여구 습기 문제를 찾아내어 V2 개선의 근거로 삼음.",
+             "장기 운전 기록을 분석하여 단기 시험에서는 보이지 않던 감지기 영점 미세 이동과 급여구 습기 문제를 찾아내어 V2 개선의 근거로 삼음.",
              "todo", "2026-12-14"],
 
             [48, "System 종합 개선(V2) — Firmware 보정 및 유지보수·조립성 보완",
@@ -1689,7 +1762,7 @@
                  "절차 ③ 최종 BOM(Bill of Materials) 정리: 3D 출력 제작 부품(소재 PETG, 중량 g, 출력시간 h)과 구매 부품(Pump, 연결구, O-ring, 3종 고분자 수지, 감지기 4종, MCU, 정량Pump) 규격·수량·단가 일람표 완성",
                  "절차 ④ 도면 번호 체계 및 STL/STEP 배포 묶음 폴더 규격화"
              ],
-             "최종 실물 실물 장치와 3D CAD 모델·2D 도면·BOM 간 불일치 0건 달성, 재현 제작 가능한 도면·BOM 묶음 완성",
+             "최종 실물 장치와 3D CAD 모델·2D 도면·BOM 간 불일치 0건 달성, 재현 제작 가능한 도면·BOM 묶음 완성",
              "초기 설계(V1)에서 실험을 거치며 수정된 V2 최종 치수를 도면과 BOM에 완벽히 동기화하여 실물 장치 산출물의 품질을 마무리함.",
              "todo", "2026-12-18"],
 
@@ -1699,7 +1772,7 @@
                  "절차 ① 유체·배관 계산 근거 정리: 순유효 수량(20L), 목표 유량(125 L/h, 안전율 1.25), 배관 내경(ID 8mm) 유속(0.69 m/s), 직관 마찰손실·부차손실 및 총 소요 양정 계산 과정 문서화",
                  "절차 ② Venturi 및 기구 설계 근거 정리: 연속방정식·베르누이 방정식 기반 입구(8.0mm)-목(3.2mm) 직경비와 음압 형성 원리, O-ring 홈(깊이 1.85×폭 3.1mm) 압착률(22%) 및 수밀 벽두께(3.6mm) 계산 근거 정리",
                  "절차 ③ 기능성 고분자 설계 근거 정리: 양이온(NH₄⁺)·음이온(NO₃⁻, PO₄³⁻)·다공성 수지(4:4:2 배합)의 선택적 흡착 메커니즘, 파과 곡선(Breakthrough Curve) 분석 및 교체 주기 산출 수식 정리",
-                 "절차 ④ 자동제어 설계 근거 정리: 4종 감지기 영점 보정 회귀식, 이동평균 노이즈 여과기, 4대 운전 운전 단계 상태 기계(FSM) 및 안전 안전 잠금 논리 문서화"
+                 "절차 ④ 자동제어 설계 근거 정리: 4종 감지기 영점 보정 회귀식, 이동평균 노이즈 여과기, 4대 운전 단계 상태 기계(FSM) 및 안전 잠금 논리 문서화"
              ],
              "유체역학·기구설계·고분자공학·자동제어 4대 영역의 모든 설계 치수와 결정 사항에 공학 수식·근거 100% 명시",
              "전공 과목(유체기계, 고분자화학2, 고분자물리2, 최적설계기초)의 이론 수식이 실제 제품 설계 치수로 어떻게 변환되었는지 보여주는 핵심 엔지니어링 문서임.",
@@ -1722,7 +1795,7 @@
              [
                  "절차 ① 전체 무환수 수조 구동 및 수류 촬영: 27L 수조 내 어류 유영 모습, 하단 유입 → 3단 여과 → Venturi 미세 산소 기포 토출로 이어지는 순환 수류 근접 촬영",
                  "절차 ② 3분 이내 단일동작(One-touch) Cartridge 교체 무편집 연속 촬영: 유지보수 단추 선택(Pump 정지) → 상부 걸쇠 해제 → Slide 인출 → 새 Cartridge 장착 → 재가동 과정을 시간 계측기와 함께 촬영",
-                 "절차 ③ 자동제어·스마트 알림 시연 촬영: 정시 자동급여 동작(Pump 5분 자동 정지 연동), 실시간 수질 실시간 감시 현황판, 수위/교체주기 알림 경보 작동 장면 촬영",
+                 "절차 ③ 자동제어·실시간 알림 시연 촬영: 정시 자동급여 동작(Pump 5분 자동 정지 연동), 실시간 수질 감시 현황판, 수위/교체주기 알림 경보 작동 장면 촬영",
                  "절차 ④ 영상 편집 및 자막 작업: 핵심 설계 사양(유량 125 L/h, 수지 3종, 교체 80초, 72h 무개입) 자막·화살표 설명을 삽입하여 2분 요약 영상 및 발표용 짧은 요약 영상 제작"
              ],
              "전체 순환 구동·단일동작(One-touch) 3분 교체·자동제어 연동 3대 필수 시연 장면 촬영 및 자막 편집본(MP4) 완성",
@@ -1780,7 +1853,7 @@
         }
 
         // --- 자동화 및 스키마 마이그레이션 유틸 (기존 1~8주 자료를 상세 SOP로 100% 자동 업그레이드) ---
-        const SCHEMA_VER = 12;
+        const SCHEMA_VER = 13;
         const OLD_W = { "SOP-W03A": [15, 17], "SOP-W03B": [18, 21], "SOP-W04": [22, 28], "SOP-W05": [29, 35], "SOP-W06": [36, 42], "SOP-W07": [43, 49], "SOP-W08": [50, 56] };
         function todayDate() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 
@@ -1826,7 +1899,7 @@
             });
             APP_STATE.schemaVer = SCHEMA_VER;
             try { localStorage.setItem("PROJECT_OS_V3_STATE", JSON.stringify(packState())); } catch (e) {}
-            if (typeof docRef !== "undefined" && docRef) {
+            if (typeof _cloudReady !== "undefined" && _cloudReady && typeof docRef !== "undefined" && docRef) {
                 try { pushCloud(); } catch (e) {}
             }
         }
@@ -1927,28 +2000,65 @@
             if (Array.isArray(u.specs)) u.specs = u.specs.map(x => (x && x._s ? Object.assign({}, INIT_SPEC_MAP.get(x.id) || {}, { value: x.value, resolved: x.resolved }) : x));
             return u;
         }
+        const CLIENT_SESSION_ID = "cli_" + Math.random().toString(36).slice(2, 10);
+        let _cloudReady = false;
+
         function setSyncState(st, msg) {
             const d = document.getElementById("sync-dot");
+            const b = document.getElementById("sync-badge");
+            const stBox = document.getElementById("cloud-sync-status-text");
+            const timeStr = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
             if (d) {
                 d.classList.remove("bg-emerald-500");
                 d.style.setProperty("background-color", st === "ok" ? "#34c759" : st === "error" ? "#ff3b30" : "#ff9500", "important");
-                if (d.parentElement) d.parentElement.title = msg || (st === "ok" ? "클라우드 동기화 정상" : "로컬 저장 중");
+                if (d.parentElement) d.parentElement.title = msg || (st === "ok" ? "원격 저장소 실시간 동기화 정상" : "내부 저장소 저장 중");
             }
-            if (st === "error" && !window._syncWarned) { window._syncWarned = 1; showToast(msg || "클라우드 동기화 실패"); }
+            if (b) {
+                b.innerText = st === "ok" ? "Google 달력 · 동기화됨" : st === "error" ? "Google 달력 · 내부 저장" : "Google 달력 · 저장 중";
+            }
+            if (stBox) {
+                stBox.innerText = st === "ok"
+                    ? `원격 저장소(meal-c8b86) 실시간 연결 정상 · 마지막 동기화 ${timeStr}`
+                    : (msg || `내부 저장소에 안전하게 보관됨 (${timeStr})`);
+            }
+            if (st === "error" && !window._syncWarned) { window._syncWarned = 1; showToast(msg || "원격 동기화 대기 중 (내부 저장소에 저장됨)"); }
         }
+
         function pushCloud() {
-            if (!docRef) return;
-            docRef.set(packState())
-                .then(() => setSyncState("ok"))
-                .catch(err => { console.warn("Cloud sync failed:", err); setSyncState("error", "클라우드 저장 실패: Firestore 보안 규칙을 확인하세요"); })
-                .then(() => { window._dirty = false; });
+            if (!docRef) { setSyncState("local", "내부 저장소 모드"); return Promise.resolve(false); }
+            setSyncState("syncing", "원격 저장소 동기화 중...");
+            const payload = packState();
+            payload.clientId = CLIENT_SESSION_ID;
+            return docRef.set(payload)
+                .then(() => { window._dirty = false; setSyncState("ok"); return true; })
+                .catch(err => {
+                    console.warn("Cloud sync failed:", err);
+                    window._dirty = false;
+                    setSyncState("error", "원격 저장소 쓰기 권한 또는 통신망을 확인하세요 (내부 저장 완료)");
+                    return false;
+                });
+        }
+
+        function forceCloudSyncNow() {
+            APP_STATE.updatedAt = Date.now();
+            syncScheduledBlocksFromTasks();
+            try { localStorage.setItem("PROJECT_OS_V3_STATE", JSON.stringify(packState())); } catch (e) {}
+            pushCloud().then(ok => {
+                if (ok) showToast("원격 저장소(Firestore)에 즉시 동기화되었습니다.");
+                else showToast("내부 저장소에 저장되었습니다.");
+            });
         }
 
         // --- 3. STATE MANAGEMENT ---
         let APP_STATE = {
+            schemaVer: SCHEMA_VER,
+            updatedAt: 0,
             dailyCapHours: 4,
+            weekendCapHours: 6,
+            avoidGcalAndLectures: true,
+            dayStart: 9,
             cascadeSop: true,
-            showLectures: false, // Default OFF so no unexpected lectures clutter the view!
+            showLectures: false,
             gcalLayers: { task: true, assignment: true, exam: true },
             gcalBridgeUrl: "",
             tasks: JSON.parse(JSON.stringify(INITIAL_TASKS)),
@@ -1973,7 +2083,7 @@
             sopSubtab: "roadmap",
             backlogFilter: "all",
             weekOffset: 0,
-            calMonthOffset: 0, // 0 = Nov 2026
+            calMonthOffset: 0,
             selectedBacklogTaskId: null,
             activeDrawerTaskId: null,
             draggedTaskId: null,
@@ -1983,61 +2093,78 @@
         let moduleChartInstance = null;
 
         function loadInitialState() {
+            let hadLocal = false;
             try {
                 const saved = localStorage.getItem("PROJECT_OS_V3_STATE");
                 if (saved) {
                     const parsed = unpackState(JSON.parse(saved));
                     if (parsed && parsed.tasks && parsed.specs) {
                         APP_STATE = Object.assign({}, APP_STATE, parsed);
+                        hadLocal = true;
                     }
                 }
             } catch (e) {
                 console.warn("LocalStorage read skipped:", e);
             }
 
+            const _prevVer = APP_STATE.schemaVer || 0;
             migrateState();
             ensureDefaults();
             autoRolloverDaily();
-
-            if (!APP_STATE.blocksSeeded && (!APP_STATE.scheduledBlocks || APP_STATE.scheduledBlocks.length === 0)) {
-                seedInitialWeekSchedule();
-            }
-            APP_STATE.blocksSeeded = true;
+            if (_prevVer < 13) runAutoOptimize(true);
+            syncScheduledBlocksFromTasks();
 
             if (docRef) {
                 docRef.onSnapshot((doc) => {
                     if ((doc.metadata && doc.metadata.hasPendingWrites) || window._dirty) return;
+                    _cloudReady = true;
                     if (doc.exists) {
-                        setSyncState("ok");
-                        const cloud = unpackState(doc.data());
-                        const cu = (cloud && cloud.updatedAt) || 0, lu = APP_STATE.updatedAt || 0;
-                        if (cloud && cloud.tasks && cu < lu) { pushCloud(); }
-                        else if (cloud && cloud.tasks && !(cu && cu === lu)) {
+                        const rawCloud = doc.data();
+                        if (rawCloud && rawCloud.clientId === CLIENT_SESSION_ID && hadLocal) {
+                            setSyncState("ok");
+                            return;
+                        }
+                        const cloud = unpackState(rawCloud);
+                        const cu = (cloud && cloud.updatedAt) || 0;
+                        const lu = hadLocal ? (APP_STATE.updatedAt || 0) : 0;
+                        if (cloud && cloud.tasks && lu > cu) {
+                            pushCloud();
+                        } else if (cloud && cloud.tasks && (cu > lu || !hadLocal)) {
                             APP_STATE = Object.assign({}, APP_STATE, cloud);
+                            hadLocal = true;
                             migrateState();
                             ensureDefaults();
+                            syncScheduledBlocksFromTasks();
+                            try { localStorage.setItem("PROJECT_OS_V3_STATE", JSON.stringify(packState())); } catch (e) {}
+                            setSyncState("ok");
                             renderAll();
+                        } else {
+                            setSyncState("ok");
                         }
                     } else {
-                        saveState(false);
+                        pushCloud();
                     }
                 }, () => {
-                    const b = document.getElementById("sync-badge");
-                    if (b) b.innerText = "Google 달력 · 로컬 저장";
-                    setSyncState("error", "클라우드 연결 실패: Firestore 보안 규칙/네트워크 확인");
+                    setSyncState("error", "원격 저장소 연결 대기 중 (내부 저장 사용)");
                 });
             }
-
         }
 
         function saveState(showToastFlag = true) {
             APP_STATE.updatedAt = Date.now();
+            syncScheduledBlocksFromTasks();
             let raw = "";
-            try { raw = JSON.stringify(packState()); localStorage.setItem("PROJECT_OS_V3_STATE", raw); } catch (e) { console.warn("LocalStorage write skipped:", e); }
-            if (raw.length > 900000) showToast("데이터가 Firestore 1MB 한도에 가까워요. JSON 저장 후 오래된 기록을 정리하세요.");
+            try {
+                raw = JSON.stringify(packState());
+                localStorage.setItem("PROJECT_OS_V3_STATE", raw);
+            } catch (e) {
+                console.warn("LocalStorage write skipped:", e);
+            }
+            if (raw.length > 900000) showToast("저장 용량이 1MB 한도에 가까워요. JSON 백업 후 오래된 기록을 정리하세요.");
             if (docRef) {
-                window._dirty = true; clearTimeout(window._ct);
-                window._ct = setTimeout(pushCloud, 700);
+                window._dirty = true;
+                clearTimeout(window._ct);
+                window._ct = setTimeout(pushCloud, 250);
             }
             scheduleRender();
             if (showToastFlag) showToast("저장되었습니다.");
@@ -2313,7 +2440,7 @@
             renderAgenda();
         }
 
-        const CHIP = "flex items-center gap-1.5 px-1.5 py-[3px] rounded-md text-[11px] leading-tight";
+        const CHIP = "flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11.5px] leading-snug font-medium";
         function chipG(ev) { return `<div class="${CHIP} bg-emerald-50 text-emerald-800"><span class="w-[3px] self-stretch rounded-full bg-emerald-500"></span><span class="truncate">${esc(ev.title)}</span></div>`; }
         function chipT(t) {
             const done = t.status === "done", st = getCategoryStyle(catKey(t), done);
@@ -2449,10 +2576,57 @@
             } else if (isEffectiveMobile()) { uiState.selDate = dateStr; renderCalendarView(); renderMobileCalDrawer(); }
         }
 
-        // --- 5D. WEEKLY TIME-BLOCK SCHEDULER ---
+        // --- 5D. UNIFIED WEEKLY TIME-BLOCK SCHEDULER (100% Synced with Tasks, Auto-Assign, Today & Monthly!) ---
+        function getMondayStrForDate(dateStr) {
+            if (!dateStr) return "";
+            const d = new Date(dateStr + "T00:00:00");
+            if (isNaN(d.getTime())) return "";
+            const dow = (d.getDay() + 6) % 7;
+            d.setDate(d.getDate() - dow);
+            return formatDateYMD(d);
+        }
+
+        // Automatically synchronize APP_STATE.scheduledBlocks from APP_STATE.tasks + layoutDay
+        function syncScheduledBlocksFromTasks() {
+            const byDate = new Map();
+            (APP_STATE.tasks || []).forEach(t => {
+                if (!t.date) return;
+                const arr = byDate.get(t.date);
+                if (arr) arr.push(t);
+                else byDate.set(t.date, [t]);
+            });
+            const newBlocks = [];
+            byDate.forEach((dayTasks, ds) => {
+                dayTasks.sort((a, b) => (a.status === "done") - (b.status === "done") || (a.start ?? 99) - (b.start ?? 99) || (a.day || 99) - (b.day || 99));
+                const lay = layoutDay(ds, dayTasks);
+                const dObj = new Date(ds + "T00:00:00");
+                const dayIdx = (dObj.getDay() + 6) % 7;
+                const wk = getMondayStrForDate(ds);
+                dayTasks.forEach(t => {
+                    const slot = lay.get(t.id) || { s: Number(APP_STATE.dayStart ?? 9), e: Number(APP_STATE.dayStart ?? 9) + Number(t.estHours || 2) };
+                    const sHour = Math.max(6, Math.min(23, Math.floor(slot.s)));
+                    const dur = Math.max(1, Math.ceil(slot.e - slot.s));
+                    newBlocks.push({
+                        id: "BLK-" + t.id,
+                        taskId: t.id,
+                        title: t.title,
+                        category: t.category || "project",
+                        dayIdx: dayIdx,
+                        startHour: sHour,
+                        duration: dur,
+                        weekKey: wk,
+                        date: ds
+                    });
+                });
+            });
+            APP_STATE.scheduledBlocks = newBlocks;
+        }
+
         function renderWeeklyView() {
             const gridWrapper = document.getElementById("weekly-grid-wrapper");
             if (!gridWrapper) return;
+
+            syncScheduledBlocksFromTasks();
 
             const mon = getMondayOfOffset(uiState.weekOffset);
             const sun = new Date(mon);
@@ -2461,58 +2635,102 @@
             if (rangeLbl) rangeLbl.innerText = `${formatDateYMD(mon)} (월) ~ ${formatDateYMD(sun)} (일)`;
 
             const dayNames = ["월", "화", "수", "목", "금", "토", "일"];
+            const todayStr = formatDateYMD(todayDate());
+            const weekDates = [];
+            for (let d = 0; d < 7; d++) {
+                const cur = new Date(mon);
+                cur.setDate(mon.getDate() + d);
+                weekDates.push(formatDateYMD(cur));
+            }
+
             const wk = getCurrentWeekKey();
             const weekBlocks = APP_STATE.scheduledBlocks.filter(b => b.weekKey === wk);
+            const layers = APP_STATE.gcalLayers || { task: true, assignment: true, exam: true };
 
-            let header = `<div class="grid grid-cols-8 border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-600">
+            // Determine dynamic hour range (default 8..22, expanding if tasks are earlier/later)
+            let minH = 8, maxH = 22;
+            weekBlocks.forEach(b => {
+                minH = Math.min(minH, b.startHour);
+                maxH = Math.max(maxH, Math.min(24, b.startHour + b.duration));
+            });
+
+            let header = `<div class="grid grid-cols-8 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
                 <div class="p-2.5 text-center border-r border-slate-100">시간</div>`;
             for (let d = 0; d < 7; d++) {
                 const cur = new Date(mon);
                 cur.setDate(mon.getDate() + d);
-                header += `<div class="p-2.5 text-center border-r border-slate-100 last:border-r-0">
-                    <span class="text-slate-900">${dayNames[d]}</span>
-                    <span class="text-[11px] text-slate-400 ml-1">${cur.getMonth() + 1}/${cur.getDate()}</span>
+                const ds = weekDates[d];
+                const isToday = ds === todayStr;
+                const dayTasks = APP_STATE.tasks.filter(t => t.date === ds && t.status !== "done");
+                const dayHrs = dayTasks.reduce((s, t) => s + Number(t.estHours || 0), 0);
+                header += `<div onclick="goDay('${ds}')" class="p-2 text-center border-r border-slate-100 last:border-r-0 cursor-pointer hover:bg-blue-50/40 transition-colors ${isToday ? 'bg-blue-50/60' : ''}" title="누르면 해당 날짜의 오늘(일간) 시간표로 이동합니다">
+                    <div>
+                        <span class="${isToday ? 'text-blue-600 font-bold' : 'text-slate-900'}">${dayNames[d]}</span>
+                        <span class="text-[11px] ${isToday ? 'text-blue-600 font-bold' : 'text-slate-400'} ml-0.5">${cur.getMonth() + 1}/${cur.getDate()}</span>
+                    </div>
+                    ${dayHrs > 0 ? `<div class="text-[10px] font-medium ${dayHrs > (APP_STATE.dailyCapHours || 4) ? 'text-rose-600' : 'text-blue-600'} mt-0.5">${dayHrs}h</div>` : ''}
                 </div>`;
             }
             header += `</div>`;
 
+            // Optional All-Day / Google Calendar event strip for the week
+            const weekGcalByDay = weekDates.map(ds =>
+                (APP_STATE.gcalEvents || []).filter(ev => ev.date === ds && ((ev.layer === "exam" && layers.exam) || (ev.layer === "task" && layers.task) || (ev.layer === "assignment" && layers.assignment)))
+            );
+            if (weekGcalByDay.some(arr => arr.length > 0)) {
+                header += `<div class="grid grid-cols-8 border-b border-slate-200 bg-emerald-50/30 text-[10px]">
+                    <div class="p-1.5 text-center font-semibold text-emerald-700 border-r border-slate-100 flex items-center justify-center">Google</div>`;
+                for (let d = 0; d < 7; d++) {
+                    header += `<div class="p-1 border-r border-slate-100 last:border-r-0 space-y-1">
+                        ${weekGcalByDay[d].map(ev => `<div class="px-1.5 py-0.5 rounded bg-emerald-100/80 text-emerald-900 font-medium truncate" title="${esc(ev.title)}">${esc(ev.title)}</div>`).join("")}
+                    </div>`;
+                }
+                header += `</div>`;
+            }
+
             let rows = "";
-            for (let hour = 9; hour <= 21; hour++) {
+            for (let hour = minH; hour <= maxH; hour++) {
                 const tStr = `${String(hour).padStart(2, "0")}:00`;
                 rows += `<div class="grid grid-cols-8 border-b border-slate-100 min-h-[48px]">
                     <div class="p-2 text-[11px] font-semibold text-slate-400 text-center border-r border-slate-100 bg-slate-50/40">${tStr}</div>`;
 
                 for (let d = 0; d < 7; d++) {
+                    const ds = weekDates[d];
                     const lecture = APP_STATE.showLectures
                         ? (APP_STATE.lectures || LECTURE_SCHEDULE).find(l => l.dayIdx === d && hour >= Math.floor(l.startHour) && hour < Math.ceil(l.startHour + l.duration))
                         : null;
-                    const block = weekBlocks.find(b => b.dayIdx === d && hour >= b.startHour && hour < b.startHour + b.duration);
+                    const matchingBlocks = weekBlocks.filter(b => b.dayIdx === d && hour >= b.startHour && hour < b.startHour + b.duration);
 
-                    if (block) {
-                        const linked = APP_STATE.tasks.find(t => t.id === block.taskId);
-                        const isDone = linked && linked.status === "done";
-                        const cat = linked ? catKey(linked) : (block.category || "project");
-                        const st = getCategoryStyle(cat, isDone);
-                        const isStart = hour === block.startHour;
-
-                        rows += `
-                            <div draggable="true" ondragstart="onDragStartBlock(event, '${block.id}')"
-                                 onclick="openNoteDrawer('${block.taskId}')"
-                                 class="p-1.5 border-r border-slate-100 cursor-pointer flex flex-col justify-between ${st.pill}">
-                                ${isStart ? `
-                                    <div class="flex justify-between items-center gap-1">
-                                        <span class="text-[10px] font-bold truncate">${esc(block.title)}</span>
-                                        <button type="button" onclick="event.stopPropagation(); removeScheduledBlock('${block.id}')" class="text-[10px] opacity-60 hover:opacity-100 px-1">×</button>
-                                    </div>
-                                ` : `<span class="text-[10px] opacity-60 truncate">↳ ${esc(block.title)}</span>`}
-                            </div>
-                        `;
+                    if (matchingBlocks.length > 0) {
+                        const cellsHtml = matchingBlocks.map(block => {
+                            const linked = APP_STATE.tasks.find(t => t.id === block.taskId);
+                            const isDone = linked && linked.status === "done";
+                            const cat = linked ? catKey(linked) : (block.category || "project");
+                            const st = getCategoryStyle(cat, isDone);
+                            const isStart = hour === block.startHour;
+                            return `
+                                <div draggable="true" ondragstart="onDragStartBlock(event, '${block.id}')"
+                                     onclick="event.stopPropagation(); openNoteDrawer('${block.taskId}')"
+                                     class="p-1 rounded-lg border cursor-grab active:cursor-grabbing flex flex-col justify-between ${st.pill}">
+                                    ${isStart ? `
+                                        <div class="flex justify-between items-start gap-1">
+                                            <span class="text-[10.5px] font-semibold leading-tight line-clamp-2">${esc(block.title)}</span>
+                                            <button type="button" onclick="event.stopPropagation(); removeScheduledBlock('${block.id}')" class="text-[11px] opacity-60 hover:opacity-100 px-1 flex-shrink-0" title="일정 배정 해제(보관함으로 이동)">×</button>
+                                        </div>
+                                        <span class="text-[9.5px] opacity-70 mt-0.5">${String(block.startHour).padStart(2, '0')}:00 · ${linked ? linked.estHours : block.duration}h</span>
+                                    ` : `<span class="text-[10px] opacity-65 truncate">↳ ${esc(block.title)}</span>`}
+                                </div>
+                            `;
+                        }).join("");
+                        rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
+                                      class="p-1 border-r border-slate-100 space-y-1 ${ds === todayStr ? 'bg-blue-50/15' : ''}">${cellsHtml}</div>`;
                     } else if (lecture) {
-                        rows += `<div class="p-1.5 border-r border-slate-100 bg-slate-100 text-slate-500 text-[11px] font-medium flex items-center">${hour === Math.floor(lecture.startHour) ? `${lecture.title}` : ''}</div>`;
+                        rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
+                                      class="p-1.5 border-r border-slate-100 bg-slate-100/80 text-slate-500 text-[11px] font-medium flex items-center">${hour === Math.floor(lecture.startHour) ? `${esc(lecture.title)} (${esc(lecture.room || '')})` : ''}</div>`;
                     } else {
                         rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
                                       onclick="clickEmptySlot(${d}, ${hour})"
-                                      class="p-1 border-r border-slate-100 hover:bg-blue-50/40 transition-colors cursor-pointer"></div>`;
+                                      class="p-1 border-r border-slate-100 hover:bg-blue-50/40 transition-colors cursor-pointer ${ds === todayStr ? 'bg-blue-50/15' : ''}"></div>`;
                     }
                 }
                 rows += `</div>`;
@@ -2522,8 +2740,9 @@
 
         function onDragStartBlock(ev, blockId) {
             uiState.draggedBlockId = blockId;
-            uiState.draggedTaskId = null;
-            ev.dataTransfer.setData("text/plain", blockId);
+            const blk = APP_STATE.scheduledBlocks.find(b => b.id === blockId);
+            uiState.draggedTaskId = blk ? blk.taskId : (blockId.startsWith("BLK-") ? blockId.slice(4) : null);
+            ev.dataTransfer.setData("text/plain", uiState.draggedTaskId || blockId);
         }
 
         function allowDrop(ev) {
@@ -2538,111 +2757,256 @@
         function dropToSlot(ev, dayIdx, hour) {
             ev.preventDefault();
             ev.currentTarget.classList.remove("drag-over-cell");
-            const wk = getCurrentWeekKey();
             const mon = getMondayOfOffset(uiState.weekOffset);
             const targetDate = new Date(mon);
             targetDate.setDate(mon.getDate() + dayIdx);
+            const targetDateStr = formatDateYMD(targetDate);
 
-            if (uiState.draggedTaskId) {
-                const task = APP_STATE.tasks.find(t => t.id === uiState.draggedTaskId);
-                if (!task) return;
-                APP_STATE.scheduledBlocks.push({
-                    id: "BLK-" + Date.now(),
-                    taskId: task.id,
-                    title: task.title,
-                    category: task.category || "project",
-                    dayIdx: dayIdx,
-                    startHour: hour,
-                    duration: Math.max(1, Math.round(task.estHours || 2)),
-                    weekKey: wk
-                });
-                task.date = formatDateYMD(targetDate);
-                uiState.draggedTaskId = null;
-                saveState(true);
-            } else if (uiState.draggedBlockId) {
+            let taskId = uiState.draggedTaskId;
+            if (!taskId && uiState.draggedBlockId) {
                 const blk = APP_STATE.scheduledBlocks.find(b => b.id === uiState.draggedBlockId);
-                if (!blk) return;
-                blk.dayIdx = dayIdx;
-                blk.startHour = hour;
-                const task = APP_STATE.tasks.find(t => t.id === blk.taskId);
-                if (task) task.date = formatDateYMD(targetDate);
-                uiState.draggedBlockId = null;
-                saveState(true);
+                taskId = blk ? blk.taskId : (uiState.draggedBlockId.startsWith("BLK-") ? uiState.draggedBlockId.slice(4) : null);
             }
+            if (!taskId) {
+                const raw = ev.dataTransfer.getData("text/plain");
+                taskId = raw && raw.startsWith("BLK-") ? raw.slice(4) : raw;
+            }
+            const task = APP_STATE.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            moveTaskToDate(task.id, targetDateStr);
+            task.start = hour;
+            uiState.draggedTaskId = null;
+            uiState.draggedBlockId = null;
+            saveState(false);
+            showToast(`${targetDateStr.slice(5)} ${String(hour).padStart(2, "0")}:00에 배정되었습니다.`);
         }
 
         function dropToBacklog(ev) {
             ev.preventDefault();
             ev.currentTarget.classList.remove("drag-over-cell");
-            if (uiState.draggedBlockId) {
-                removeScheduledBlock(uiState.draggedBlockId);
-                uiState.draggedBlockId = null;
+            let taskId = uiState.draggedTaskId;
+            if (!taskId && uiState.draggedBlockId) {
+                const blk = APP_STATE.scheduledBlocks.find(b => b.id === uiState.draggedBlockId);
+                taskId = blk ? blk.taskId : (uiState.draggedBlockId.startsWith("BLK-") ? uiState.draggedBlockId.slice(4) : null);
             }
+            if (taskId) {
+                const task = APP_STATE.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.date = "";
+                    delete task.start;
+                    saveState(false);
+                    showToast("일정을 대기 보관함으로 옮겼습니다.");
+                }
+            }
+            uiState.draggedTaskId = null;
+            uiState.draggedBlockId = null;
         }
 
         function selectBacklogTask(taskId) {
             uiState.selectedBacklogTaskId = (uiState.selectedBacklogTaskId === taskId) ? null : taskId;
             renderBacklogSidebar();
+            if (uiState.currentView === "today") renderOpt();
         }
 
         function clickEmptySlot(dayIdx, hour) {
-            if (!uiState.selectedBacklogTaskId) return;
-            const task = APP_STATE.tasks.find(t => t.id === uiState.selectedBacklogTaskId);
-            if (!task) return;
-            const wk = getCurrentWeekKey();
             const mon = getMondayOfOffset(uiState.weekOffset);
             const targetDate = new Date(mon);
             targetDate.setDate(mon.getDate() + dayIdx);
+            const targetDateStr = formatDateYMD(targetDate);
 
-            APP_STATE.scheduledBlocks.push({
-                id: "BLK-" + Date.now(),
-                taskId: task.id,
-                title: task.title,
-                category: task.category || "project",
-                dayIdx: dayIdx,
-                startHour: hour,
-                duration: Math.max(1, Math.round(task.estHours || 2)),
-                weekKey: wk
-            });
-            task.date = formatDateYMD(targetDate);
-            uiState.selectedBacklogTaskId = null;
-            saveState(true);
+            if (uiState.selectedBacklogTaskId) {
+                const task = APP_STATE.tasks.find(t => t.id === uiState.selectedBacklogTaskId);
+                if (!task) return;
+                moveTaskToDate(task.id, targetDateStr);
+                task.start = hour;
+                uiState.selectedBacklogTaskId = null;
+                saveState(false);
+                showToast(`${targetDateStr.slice(5)} ${String(hour).padStart(2, "0")}:00에 배정되었습니다.`);
+            } else {
+                openNewTaskModalForDate(targetDateStr);
+            }
         }
 
         function removeScheduledBlock(blockId) {
-            APP_STATE.scheduledBlocks = APP_STATE.scheduledBlocks.filter(b => b.id !== blockId);
-            saveState(true);
+            const blk = APP_STATE.scheduledBlocks.find(b => b.id === blockId);
+            const taskId = blk ? blk.taskId : (blockId.startsWith("BLK-") ? blockId.slice(4) : null);
+            const task = APP_STATE.tasks.find(t => t.id === taskId);
+            if (task) {
+                if (task.start != null) {
+                    delete task.start;
+                    showToast("고정 시각을 해제하여 자동 시간 배치로 전환했습니다.");
+                } else {
+                    task.date = "";
+                    showToast("해당 일정을 주간 시간표에서 빼서 보관함으로 이동했습니다.");
+                }
+            }
+            saveState(false);
         }
 
         function clearWeekSchedule() {
-            const wk = getCurrentWeekKey();
-            APP_STATE.scheduledBlocks = APP_STATE.scheduledBlocks.filter(b => b.weekKey !== wk);
-            saveState(true);
+            const mon = getMondayOfOffset(uiState.weekOffset);
+            const weekDates = new Set();
+            for (let d = 0; d < 7; d++) {
+                const cur = new Date(mon);
+                cur.setDate(mon.getDate() + d);
+                weekDates.add(formatDateYMD(cur));
+            }
+            uiState.undo = APP_STATE.tasks.map(t => [t.id, t.date, t.start]);
+            let cleared = 0;
+            APP_STATE.tasks.forEach(t => {
+                if (t.status !== "done" && weekDates.has(t.date) && t.category === "project") {
+                    t.date = "";
+                    delete t.start;
+                    cleared++;
+                }
+            });
+            saveState(false);
+            showToast(cleared ? `이번 주 미완료 일정 ${cleared}건을 비웠습니다. [되돌리기]로 복구할 수 있습니다.` : "이번 주에 비울 미완료 Project 일정이 없습니다.");
         }
 
-        // --- 5E. UNSPOKEN SMART OPTIMIZATIONS ---
-        function runAutoOptimize() {
-            const cap = Number(APP_STATE.dailyCapHours || 4), per = Number(APP_STATE.maxPerDay) || 99;
-            uiState.undo = APP_STATE.tasks.map(t => [t.id, t.date]);
+        // --- 5E. AVAILABILITY-AWARE AUTO-SCHEDULE (기존 일정·Google 달력·수업 제외 후 가용 시간 내 주중·주말 균형 배정) ---
+        // Parse time range like "(14:00~16:30)" or "19:00-19:30" from a Google Calendar event
+        function parseGcalTimeSlot(ev) {
+            if (!ev) return null;
+            if (ev.startHour != null && ev.duration != null) {
+                return { s: Number(ev.startHour), e: Number(ev.startHour) + Number(ev.duration), h: Number(ev.duration) };
+            }
+            const m = String(ev.title || "").match(/(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})/);
+            if (m) {
+                const s = Number(m[1]) + Number(m[2]) / 60;
+                const e = Number(m[3]) + Number(m[4]) / 60;
+                if (e > s) return { s, e, h: e - s };
+            }
+            const mSingle = String(ev.title || "").match(/(\d{1,2}):(\d{2})/);
+            if (mSingle) {
+                const s = Number(mSingle[1]) + Number(mSingle[2]) / 60;
+                return { s, e: s + 1.5, h: 1.5 };
+            }
+            return { s: null, e: null, h: 1.5 }; // 종일/시간 미지정 Google 일정은 기본 1.5h 차감
+        }
+
+        // Compute how many hours are already occupied on date `ds` and what the net available budget is
+        function getDayAvailability(ds) {
+            const dObj = new Date(ds + "T00:00:00");
+            const jsDay = dObj.getDay(); // 0=Sun, 6=Sat
+            const isWeekend = (jsDay === 0 || jsDay === 6);
+            const dow = (jsDay + 6) % 7; // 0=Mon .. 6=Sun
+
+            const wkdayCap = Number(APP_STATE.dailyCapHours || 4);
+            const wkendCap = Number(APP_STATE.weekendCapHours || Math.max(wkdayCap + 2, 6));
+            const baseCap = isWeekend ? wkendCap : wkdayCap;
+
+            let fixedTaskHours = 0;
+            APP_STATE.tasks.forEach(t => {
+                if (t.status !== "done" && t.date === ds && (t.category !== "project" || t.pinned)) {
+                    fixedTaskHours += Number(t.estHours || 0);
+                }
+            });
+
+            let gcalHours = 0;
+            const layers = APP_STATE.gcalLayers || { task: true, assignment: true, exam: true };
+            if (APP_STATE.avoidGcalAndLectures !== false) {
+                (APP_STATE.gcalEvents || []).forEach(ev => {
+                    if (ev.date !== ds) return;
+                    if ((ev.layer === "exam" && !layers.exam) || (ev.layer === "task" && !layers.task) || (ev.layer === "assignment" && !layers.assignment)) return;
+                    const parsed = parseGcalTimeSlot(ev);
+                    gcalHours += parsed ? parsed.h : 1.5;
+                });
+            }
+
+            // On weekdays, if a day has heavy lectures (e.g. Tue/Thu have 6h of classes vs Mon/Wed 3h),
+            // automatically scale down weekday available cap so busy lecture days aren't overloaded!
+            let lecturePenalty = 0;
+            if (!isWeekend && APP_STATE.avoidGcalAndLectures !== false) {
+                const dayLecs = (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === dow);
+                const lecHours = dayLecs.reduce((s, l) => s + Number(l.duration || 1.5), 0);
+                // If a weekday has >= 4.5h of lectures (like Tue/Thu 6h), reduce project cap by 1.5h; if >= 3h, reduce by 0.5h
+                if (lecHours >= 4.5) lecturePenalty = 1.5;
+                else if (lecHours >= 3.0) lecturePenalty = 0.5;
+            }
+
+            const effectiveCap = Math.max(1.5, baseCap - lecturePenalty);
+            const preUsed = fixedTaskHours + gcalHours;
+            const remainingFree = Math.max(0, effectiveCap - preUsed);
+            return { isWeekend, baseCap, effectiveCap, fixedTaskHours, gcalHours, preUsed, remainingFree };
+        }
+
+        function runAutoOptimize(silent = false) {
+            const wkdayCap = Number(APP_STATE.dailyCapHours || 4);
+            const wkendCap = Number(APP_STATE.weekendCapHours || Math.max(wkdayCap + 2, 6));
+            const per = Number(APP_STATE.maxPerDay) || 99;
+            uiState.undo = APP_STATE.tasks.map(t => [t.id, t.date, t.start]);
+
             const cur = todayDate(), load = {}, cnt = {}, q = {};
-            APP_STATE.tasks.forEach(t => { if (t.status !== "done" && t.category !== "project" && t.date) load[t.date] = (load[t.date] || 0) + Number(t.estHours || 0); });
-            APP_STATE.tasks.filter(t => t.status !== "done" && t.category === "project").sort((a, b) => (a.day || 0) - (b.day || 0) || (a.date || "").localeCompare(b.date || "")).forEach(t => { (q[t.projectId || "P1"] = q[t.projectId || "P1"] || []).push(t); });
-            const keys = Object.keys(q); let rr = 0;
+
+            // Collect all incomplete, unpinned project tasks in SOP order
+            APP_STATE.tasks
+                .filter(t => t.status !== "done" && t.category === "project" && !t.pinned)
+                .sort((a, b) => (a.day || 0) - (b.day || 0) || (a.date || "").localeCompare(b.date || ""))
+                .forEach(t => {
+                    delete t.start;
+                    (q[t.projectId || "P1"] = q[t.projectId || "P1"] || []).push(t);
+                });
+
+            const keys = Object.keys(q);
+            let rr = 0;
+            const touchedDates = new Set();
+
             for (let i = 0; i < 400 && keys.some(k => q[k].length); i++, cur.setDate(cur.getDate() + 1)) {
                 if (APP_STATE.skipSun && cur.getDay() === 0) continue;
                 const ds = formatDateYMD(cur);
+                const avail = getDayAvailability(ds);
+                if (avail.ds === undefined) avail.ds = ds;
+
+                // Pre-load the day with existing assignments, exams, pinned tasks, and Google Calendar events!
+                if (load[ds] === undefined) load[ds] = avail.preUsed;
+                if (cnt[ds] === undefined) {
+                    cnt[ds] = APP_STATE.tasks.filter(t => t.status !== "done" && t.date === ds && (t.category !== "project" || t.pinned)).length;
+                }
+
+                // If the day is already full because of exams/assignments/Google Calendar events, skip to next day!
+                if (load[ds] >= avail.effectiveCap) continue;
+
                 for (let placed = true; placed;) {
                     placed = false;
                     for (let j = 0; j < keys.length; j++) {
-                        const k = keys[(rr + j) % keys.length], t = q[k][0]; if (!t) continue;
+                        const k = keys[(rr + j) % keys.length], t = q[k][0];
+                        if (!t) continue;
                         const h = Number(t.estHours || 2), used = load[ds] || 0, c = cnt[ds] || 0;
-                        if (c < per && (used + h <= cap || used === 0)) { t.date = ds; load[ds] = used + h; cnt[ds] = c + 1; q[k].shift(); rr = (rr + j + 1) % keys.length; placed = true; break; }
+                        // Place if it fits within effectiveCap, OR if the day has 0 existing load and this single task is slightly larger than effectiveCap
+                        if (c < per && (used + h <= avail.effectiveCap || (used === 0 && c === 0))) {
+                            t.date = ds;
+                            load[ds] = used + h;
+                            cnt[ds] = c + 1;
+                            touchedDates.add(ds);
+                            q[k].shift();
+                            rr = (rr + j + 1) % keys.length;
+                            placed = true;
+                            break;
+                        }
                     }
                 }
             }
-            const days = Object.keys(cnt).length, n = Object.values(cnt).reduce((a, b) => a + b, 0);
+
+            // Assign exact non-overlapping start hours (avoiding lectures, Google Calendar timed events, and fixed tasks)
+            touchedDates.forEach(ds => {
+                const dayList = APP_STATE.tasks.filter(t => t.date === ds).sort((a, b) => (a.status === "done") - (b.status === "done") || (a.day || 99) - (b.day || 99));
+                const lay = layoutDay(ds, dayList);
+                dayList.forEach(t => {
+                    const slot = lay.get(t.id);
+                    if (slot && t.start == null) t.start = slot.s;
+                });
+            });
+
+            uiState.weekOffset = 0;
+            uiState.calMonthOffset = 0;
+            syncScheduledBlocksFromTasks();
+
+            const days = touchedDates.size;
+            const n = Array.from(touchedDates).reduce((acc, ds) => acc + APP_STATE.tasks.filter(t => t.date === ds && t.category === "project" && t.status !== "done").length, 0);
             saveState(false);
-            showToast(`하루 ${cap}h 기준 · Project ${keys.length}개를 ${days}일에 번갈아 배정 (하루 평균 ${(n / Math.max(1, days)).toFixed(1)}개) · ${sopForecast()}`);
+            if (!silent) showToast(`기존·Google 일정 제외 가용 시간 기준(주중 ${wkdayCap}h / 주말 ${wkendCap}h) · ${n}개 일정을 ${days}일에 균형 배정했습니다 · ${sopForecast()}`);
         }
 
         function rolloverOverdueTasks() {
@@ -2768,7 +3132,7 @@
                             </div>
                             <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">전체 ${totalDone}/${allSop.length}일 완료 (${totalPct}%)</span>
                         </div>
-                        <div class="flex flex-wrap gap-1.5 pt-1">
+                        <div class="flex flex-nowrap sm:flex-wrap gap-1.5 pt-1 overflow-x-auto scrollbar-thin pb-1">
                             <button type="button" onclick="setSopWeekFilter('all')" class="chip ${filterVal === 'all' ? 'on' : ''}">전체 (1~8주)</button>
                             ${[1, 2, 3, 4, 5, 6, 7, 8].map(w => {
                                 const st = wkStat[w] || { d: 0, n: 7 };
@@ -3070,58 +3434,219 @@
             return { url: (b.url || "").trim(), token: (b.token || "").trim() };
         }
         function copyGasBridgeCode() {
-            const gasCode = `// Google Apps Script (script.google.com) - 모든 달력 읽기, 달력 이름으로 분류
-// 1) 아래 TOKEN을 본인만 아는 값으로 바꾸세요
-// 2) 배포 > 새 배포 > 웹 앱 > 실행: 나 / 액세스: 모든 사용자
-// 달력 이름에 "시험"이 있으면 시험, "과제"가 있으면 과제, 나머지는 일반 일정. "강의/학사"가 들어간 달력은 제외.
-const TOKEN = "여기에_비밀값";
-function doGet(e) {
-  const out = ContentService.createTextOutput();
-  out.setMimeType(ContentService.MimeType.JSON);
-  if (!e || !e.parameter || e.parameter.token !== TOKEN) return out.setContent(JSON.stringify({ error: "unauthorized" }));
+            const gasCode = `// Google Apps Script (script.google.com) - Google 달력 → 홈페이지 실시간 연동 Code
+// [권한 설정 2가지]
+// 1) 우측 상단 [배포] > [새 배포] > 유형: [웹 앱]
+//    - 다음 사용자로 실행: "나 (본인 계정)"
+//    - 액세스 권한이 있는 사용자: "모든 사용자 (Anyone)" -> 배포 후 나오는 웹 앱 URL을 홈페이지에 붙여넣기!
+// 2) (선택) Google 달력에서 일정 수정 시 1초 만에 홈페이지에 반영하려면:
+//    - 좌측 메뉴 [트리거(시계 모양)] > [+ 트리거 추가] > 실행할 함수: doGet > 이벤트 소스: [캘린더에서] > [캘린더 업데이트됨] 저장!
+const TOKEN = "";
+
+function collectEvents() {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+  const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 4, 0);
   const tz = "Asia/Seoul", list = [];
   CalendarApp.getAllCalendars().forEach(function (cal) {
     const name = cal.getName();
     if (/강의|학사|lecture/i.test(name)) return;
     const layer = /시험|exam/i.test(name) ? "exam" : (/과제|assign/i.test(name) ? "assignment" : "task");
     cal.getEvents(start, end).forEach(function (ev) {
-      const s = ev.getStartTime();
-      let eTime = ev.getEndTime().getTime();
+      const s = ev.getStartTime(), eTimeObj = ev.getEndTime();
+      const isAllDay = ev.isAllDayEvent();
+      const startHour = isAllDay ? null : (s.getHours() + s.getMinutes() / 60);
+      const duration = isAllDay ? null : Math.max(0.5, (eTimeObj.getTime() - s.getTime()) / 3600000);
+      let eTime = eTimeObj.getTime();
       if (eTime > s.getTime()) eTime -= 1;
       const endDs = Utilities.formatDate(new Date(eTime), tz, "yyyy-MM-dd");
       for (let t = s.getTime(), n = 0; n < 31; t += 86400000, n++) {
         const ds = Utilities.formatDate(new Date(t), tz, "yyyy-MM-dd");
         if (ds > endDs) break;
-        list.push({ id: ev.getId() + "_" + ds, title: ev.getTitle(), date: ds, layer: layer });
+        list.push({ id: ev.getId() + "_" + ds, title: ev.getTitle(), date: ds, layer: layer, calName: name, startHour: startHour, duration: duration });
       }
     });
   });
-  return out.setContent(JSON.stringify(list));
+  return list;
+}
+
+function doGet(e) {
+  const out = ContentService.createTextOutput().setMimeType(ContentService.MimeType.JSON);
+  if (TOKEN && (!e || !e.parameter || e.parameter.token !== TOKEN)) {
+    return out.setContent(JSON.stringify({ error: "unauthorized" }));
+  }
+  return out.setContent(JSON.stringify(collectEvents()));
+}
+
+function doPost(e) {
+  const out = ContentService.createTextOutput().setMimeType(ContentService.MimeType.JSON);
+  try {
+    const body = JSON.parse(e.postData.contents || "{}");
+    if (TOKEN && body.token !== TOKEN) return out.setContent(JSON.stringify({ error: "unauthorized" }));
+    const cal = CalendarApp.getDefaultCalendar();
+    const items = body.tasks || [];
+    let created = 0;
+    items.forEach(function (t) {
+      if (!t.date || !t.title) return;
+      const parts = t.date.split("-").map(Number);
+      const sHour = Number(t.start != null ? t.start : 9);
+      const dur = Number(t.estHours || 2);
+      const startDt = new Date(parts[0], parts[1] - 1, parts[2], Math.floor(sHour), Math.round((sHour % 1) * 60));
+      const endDt = new Date(startDt.getTime() + dur * 3600000);
+      const existing = cal.getEventsForDay(startDt).some(function (ev) { return ev.getTitle() === t.title; });
+      if (!existing) {
+        cal.createEvent(t.title, startDt, endDt, { description: t.deliverable || "" });
+        created++;
+      }
+    });
+    return out.setContent(JSON.stringify({ ok: true, created: created }));
+  } catch (err) {
+    return out.setContent(JSON.stringify({ error: String(err) }));
+  }
 }`;
-            copyTextFallback(gasCode, "Google 연동 Code가 복사되었습니다!");
+            copyTextFallback(gasCode, "양방향 Google 달력 연동 Code가 복사되었습니다!");
         }
+
+        function parseIcsTextToEvents(icsText) {
+            const blocks = (icsText || "").split("BEGIN:VEVENT").slice(1);
+            const list = [];
+            blocks.forEach((b, idx) => {
+                const sum = b.match(/SUMMARY[^:]*:(.*)/);
+                const dt = b.match(/DTSTART[^:]*:(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
+                const dtEnd = b.match(/DTEND[^:]*:(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
+                if (!sum || !dt) return;
+                const title = sum[1].replace(/\\,/g, ",").trim();
+                const date = `${dt[1]}-${dt[2]}-${dt[3]}`;
+                let startHour = null, duration = null;
+                if (dt[4] !== undefined) {
+                    startHour = Number(dt[4]) + Number(dt[5] || 0) / 60;
+                    if (dtEnd && dtEnd[4] !== undefined) {
+                        const eH = Number(dtEnd[4]) + Number(dtEnd[5] || 0) / 60;
+                        if (eH > startHour) duration = eH - startHour;
+                    }
+                    if (!duration) duration = 1.5;
+                }
+                const layer = /시험|중간|기말|퀴즈/i.test(title) ? "exam" : (/과제|제출|레포트|보고서/i.test(title) ? "assignment" : "task");
+                list.push({ id: "ICS-" + date + "-" + idx, title, date, layer, startHour, duration, src: "gas" });
+            });
+            return list;
+        }
+
         function gcalFetch(silent) {
             const b = getBridge();
-            if (!b.url) { if (!silent) showToast("Apps Script 웹 앱 주소를 먼저 입력해 주세요."); return Promise.resolve(false); }
-            const full = b.url + (b.url.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(b.token);
+            if (!b.url) { if (!silent) showToast("Apps Script 웹 앱 주소 또는 iCal(.ics) 주소를 먼저 입력해 주세요."); return Promise.resolve(false); }
+            const isIcsUrl = /\.ics(\?|$)/i.test(b.url);
+            const full = isIcsUrl ? b.url : (b.url + (b.url.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(b.token || ""));
             return fetch(full)
-                .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+                .then(r => {
+                    if (!r.ok) throw new Error("HTTP " + r.status);
+                    return isIcsUrl ? r.text().then(parseIcsTextToEvents) : r.json();
+                })
                 .then(list => {
                     if (!Array.isArray(list)) throw new Error(list && list.error ? list.error : "형식 오류");
                     const keep = (APP_STATE.gcalEvents || []).filter(e => e.src !== "gas" && !/^GC-[1-6]$/.test(e.id));
                     APP_STATE.gcalEvents = keep.concat(list.map(e => Object.assign({}, e, { src: "gas" })));
+
+                    // Also sync exam / assignment items into APP_STATE.tasks so they appear in 분류·과목, 주간 시간표, and 오늘!
+                    list.forEach(ev => {
+                        if (ev.layer === "exam" || ev.layer === "assignment") {
+                            const tid = "GCAL-" + ev.id;
+                            if (!APP_STATE.tasks.some(t => t.id === tid)) {
+                                APP_STATE.tasks.push({
+                                    id: tid,
+                                    day: 0,
+                                    week: 0,
+                                    category: ev.layer,
+                                    module: ev.calName || (ev.layer === "exam" ? "시험" : "과제"),
+                                    title: ev.title,
+                                    deliverable: "Google 달력 연동",
+                                    estHours: 2.0,
+                                    status: "todo",
+                                    date: ev.date,
+                                    priority: "high",
+                                    subtasks: [{ text: ev.title, done: false }],
+                                    notes: "",
+                                    gapType: "none",
+                                    gapIssue: "",
+                                    gapSolution: ""
+                                });
+                            }
+                        }
+                    });
                     saveState(false);
                     if (!silent) showToast("Google 달력 일정 " + list.length + "건을 동기화했습니다.");
                     return true;
                 })
                 .catch(err => {
                     console.warn("gcal sync failed:", err);
-                    if (!silent) showToast("동기화 실패: " + (err && err.message === "unauthorized" ? "토큰이 다릅니다" : "주소·배포 권한(모든 사용자)을 확인하세요"));
+                    if (!silent) showToast("동기화 실패: " + (err && err.message === "unauthorized" ? "비밀 토큰을 확인하거나 비워두세요" : "웹 앱 주소 및 배포 권한(모든 사용자)을 확인하세요"));
                     return false;
                 });
+        }
+
+        function pushTasksToGcalBridge() {
+            const b = getBridge();
+            const u = document.getElementById("gcal-bridge-url"), t = document.getElementById("gcal-bridge-token");
+            const url = (u && u.value.trim()) || b.url;
+            const token = (t && t.value.trim()) || b.token;
+            if (!url) {
+                showToast("먼저 Google Apps Script 웹 앱 주소를 입력하거나, 아래 [.ics로 저장]을 이용해 주세요.");
+                return;
+            }
+            try { localStorage.setItem("GCAL_BRIDGE", JSON.stringify({ url, token })); } catch (e) {}
+            const todoTasks = APP_STATE.tasks.filter(x => x.date && x.status !== "done");
+            fetch(url, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ token, tasks: todoTasks })
+            }).then(() => {
+                showToast(`미완료 일정 ${todoTasks.length}건을 Google 달력으로 전송했습니다.`);
+            }).catch(() => {
+                showToast("전송 실패: 웹 앱 주소를 확인해 주세요.");
+            });
+        }
+
+        function exportIcsFile() {
+            syncScheduledBlocksFromTasks();
+            const pad = n => String(n).padStart(2, "0");
+            const fmtIcsDt = (ds, hr) => {
+                const [y, m, d] = ds.split("-").map(Number);
+                const H = Math.floor(hr), M = Math.round((hr - H) * 60);
+                return `${y}${pad(m)}${pad(d)}T${pad(H)}${pad(M)}00`;
+            };
+            const lines = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//Workspace iOS Edition//KO",
+                "CALSCALE:GREGORIAN",
+                "METHOD:PUBLISH"
+            ];
+            APP_STATE.tasks.filter(t => t.date).forEach(t => {
+                const blk = APP_STATE.scheduledBlocks.find(b => b.taskId === t.id);
+                const sH = t.start != null ? Number(t.start) : (blk ? blk.startHour : 9);
+                const eH = sH + Number(t.estHours || 2);
+                lines.push(
+                    "BEGIN:VEVENT",
+                    `UID:${t.id}@workspace.local`,
+                    `DTSTART;TZID=Asia/Seoul:${fmtIcsDt(t.date, sH)}`,
+                    `DTEND;TZID=Asia/Seoul:${fmtIcsDt(t.date, eH)}`,
+                    `SUMMARY:${(t.title || "").replace(/[,;]/g, " ")}`,
+                    `DESCRIPTION:${((t.deliverable ? "산출물: " + t.deliverable + " / " : "") + (t.check ? "종료기준: " + t.check : "")).replace(/\n/g, " ")}`,
+                    "END:VEVENT"
+                );
+            });
+            lines.push("END:VCALENDAR");
+            const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `workspace_schedule_${formatDateYMD(new Date())}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Google 달력 및 iPhone 달력에 바로 등록 가능한 .ics 문서를 저장했습니다.");
         }
         function syncFromGcalBridge() {
             const u = document.getElementById("gcal-bridge-url"), t = document.getElementById("gcal-bridge-token");
@@ -3131,11 +3656,18 @@ function doGet(e) {
         function autoGcalSync(force) {
             if (!getBridge().url) return;
             const now = Date.now();
-            if (!force && now - (window._lastGsync || 0) < 600000) return;
+            if (!force && now - (window._lastGsync || 0) < 60000) return;
             window._lastGsync = now;
-            gcalFetch(true);
+            gcalFetch(true).then(ok => {
+                const lbl = document.getElementById("gcal-last-sync-lbl");
+                if (lbl && ok) {
+                    lbl.innerText = "최근 동기화: " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                }
+            });
         }
-        document.addEventListener("visibilitychange", () => { if (!document.hidden) autoGcalSync(); });
+        setInterval(() => { if (!document.hidden) autoGcalSync(false); }, 60000);
+        window.addEventListener("focus", () => autoGcalSync(false));
+        document.addEventListener("visibilitychange", () => { if (document.hidden && window._dirty) pushCloud(); else if (!document.hidden) autoGcalSync(); });
         function importIcsFile(ev) {
             const file = ev.target.files[0];
             if (!file) return;
@@ -3417,62 +3949,296 @@ Script.complete();`;
             return `<span class="stp" onclick="event.stopPropagation()"><button type="button" onclick="adjHours('${t.id}',-0.5)">−</button><b>${t.estHours}h</b><button type="button" onclick="adjHours('${t.id}',0.5)">＋</button></span>`;
         }
         function setCap(v) { APP_STATE.dailyCapHours = Math.min(12, Math.max(1, Number(v))); saveState(false); }
+        function setWeekendCap(v) { APP_STATE.weekendCapHours = Math.min(14, Math.max(1, Number(v))); saveState(false); }
+        function setAvoidExisting(c) { APP_STATE.avoidGcalAndLectures = !!c; saveState(false); }
         function setMaxPer(v) { APP_STATE.maxPerDay = Number(v); saveState(false); }
         function setSkipSun(c) { APP_STATE.skipSun = !!c; saveState(false); }
         function undoOptimize() {
             if (!uiState.undo) return;
-            const m = new Map(uiState.undo);
-            APP_STATE.tasks.forEach(t => { if (m.has(t.id)) t.date = m.get(t.id); });
-            uiState.undo = null; saveState(false); showToast("↩ 배정 전 일정으로 되돌렸어요.");
+            uiState.undo.forEach(([id, date, start]) => {
+                const t = APP_STATE.tasks.find(x => x.id === id);
+                if (!t) return;
+                t.date = date;
+                if (start === undefined) delete t.start;
+                else t.start = start;
+            });
+            uiState.undo = null;
+            saveState(false);
+            showToast("↩ 배정 전 일정과 시각으로 되돌렸습니다.");
         }
         function optHtml() {
-            const cap = Number(APP_STATE.dailyCapHours || 4), per = Number(APP_STATE.maxPerDay) || 0;
-            return `<div class="flex items-center justify-between"><b class="text-sm"> 스마트 자동 배정</b><span class="text-xs text-slate-500">하루 <b id="cap-label" class="text-slate-900">${cap}h</b>${per ? ` · 최대 ${per}개` : " · 개수 제한 없음"}</span></div>
-            <div class="flex items-center gap-2"><span class="stp"><button type="button" onclick="setCap(${cap - 1})">−</button><b>${cap}h</b><button type="button" onclick="setCap(${cap + 1})">＋</button></span>
-              <div class="flex gap-1 flex-wrap">${[4, 6, 8, 10].map(v => `<button type="button" onclick="setCap(${v})" class="chip ${v === cap ? "on" : ""}">${v}h</button>`).join("")}</div></div>
-            <div class="flex items-center justify-between text-xs text-slate-600"><span>하루 최대 Project</span>
+            const cap = Number(APP_STATE.dailyCapHours || 4);
+            const wCap = Number(APP_STATE.weekendCapHours || Math.max(cap + 2, 6));
+            const per = Number(APP_STATE.maxPerDay) || 0;
+            const avoid = APP_STATE.avoidGcalAndLectures !== false;
+            return `<div class="flex items-center justify-between"><b class="text-sm text-slate-900">자동 배정</b><span class="text-xs text-slate-500">주중 <b id="cap-label" class="text-slate-900">${cap}h</b> · 주말 <b class="text-blue-600">${wCap}h</b></span></div>
+            <div class="space-y-2 bg-slate-50/80 p-3 rounded-2xl text-xs">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-slate-600 font-medium">주중 가용 한도</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="stp"><button type="button" onclick="setCap(${cap - 0.5})">−</button><b>${cap}h</b><button type="button" onclick="setCap(${cap + 0.5})">＋</button></span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-slate-600 font-medium">주말(토·일) 가용 한도</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="stp"><button type="button" onclick="setWeekendCap(${wCap - 0.5})">−</button><b>${wCap}h</b><button type="button" onclick="setWeekendCap(${wCap + 0.5})">＋</button></span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-600"><span>하루 최대 배정 개수</span>
               <select onchange="setMaxPer(this.value)" class="dt" style="width:96px">${[[0, "제한 없음"], [1, "1개"], [2, "2개"], [3, "3개"], [4, "4개"]].map(([v, l]) => `<option value="${v}" ${v === per ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-            <label class="flex items-center justify-between text-xs text-slate-600"><span>일요일은 쉬기</span><input type="checkbox" ${APP_STATE.skipSun ? "checked" : ""} onchange="setSkipSun(this.checked)" class="w-4 h-4 accent-blue-600"></label>
-            <label class="flex items-center justify-between text-xs text-slate-600"><span>미루면 후속 SOP 연쇄 이동</span><input type="checkbox" ${APP_STATE.cascadeSop ? "checked" : ""} onchange="toggleCascadeMode(this.checked)" class="w-4 h-4 accent-blue-600"></label>
-            <button type="button" onclick="runAutoOptimize()" class="btn-main w-full text-sm">대기 일정 자동 배정</button>
+            <label class="flex items-center justify-between text-xs text-slate-700 font-medium"><span>기존·Google·수업 시간 제외 후 배정</span><input type="checkbox" ${avoid ? "checked" : ""} onchange="setAvoidExisting(this.checked)" class="w-4 h-4 accent-blue-600"></label>
+            <label class="flex items-center justify-between text-xs text-slate-600"><span>일요일은 비워두기</span><input type="checkbox" ${APP_STATE.skipSun ? "checked" : ""} onchange="setSkipSun(this.checked)" class="w-4 h-4 accent-blue-600"></label>
+            <label class="flex items-center justify-between text-xs text-slate-600"><span>일정 미루면 후속 SOP 연쇄 이동</span><input type="checkbox" ${APP_STATE.cascadeSop ? "checked" : ""} onchange="toggleCascadeMode(this.checked)" class="w-4 h-4 accent-blue-600"></label>
+            <button type="button" onclick="runAutoOptimize()" class="btn-main w-full text-sm">가용 시간 내 자동 배정</button>
             <div class="grid grid-cols-2 gap-2"><button type="button" onclick="undoOptimize()" class="btn-sub" ${uiState.undo ? "" : "disabled"}>↩ 되돌리기</button><button type="button" onclick="rolloverOverdueTasks()" class="btn-sub">밀린 일정 당기기</button></div>`;
         }
-        function renderOpt() { const h = optHtml(); ["opt-side", "opt-day"].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = h; }); }
+        function renderOpt() {
+            const h = optHtml();
+            const sideEl = document.getElementById("opt-side");
+            if (sideEl) sideEl.innerHTML = h;
+
+            const dayEl = document.getElementById("opt-day");
+            if (dayEl) {
+                const ds = dayStr();
+                const otherTasks = APP_STATE.tasks.filter(t => t.status !== "done" && t.date !== ds).slice(0, 12);
+                const quickPullHtml = `
+                    <div class="pt-3 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-xs text-slate-800">보관함 · 다른 날 일정 끌어오기</span>
+                            <span class="text-[11px] text-slate-400">끌어서 시간표에 놓기</span>
+                        </div>
+                        ${uiState.selectedBacklogTaskId ? `<div class="p-2 rounded-xl bg-blue-50 text-blue-700 text-[11px] font-medium">시간표에서 원하는 시각 칸을 누르면 바로 배정됩니다.</div>` : ''}
+                        <div class="space-y-1.5 max-h-60 overflow-y-auto scrollbar-thin pr-1">
+                            ${otherTasks.map(t => {
+                                const st = getCategoryStyle(catKey(t), false);
+                                const isSel = uiState.selectedBacklogTaskId === t.id;
+                                return `
+                                    <div draggable="true" ondragstart="onDragStartTask(event, '${t.id}')"
+                                         onclick="selectBacklogTask('${t.id}')"
+                                         class="p-2.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing flex items-center justify-between gap-2 ${isSel ? 'ring-2 ring-blue-600 bg-blue-50/50 border-blue-400' : 'bg-slate-50/70 hover:bg-slate-50 border-slate-200'}">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full ${st.dot}"></span>
+                                                <span class="text-[10.5px] font-semibold text-slate-500">${esc(modLabel(t) || st.label)} · ${t.estHours}h</span>
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-900 truncate mt-0.5">${esc(t.title)}</p>
+                                        </div>
+                                        <button type="button" onclick="event.stopPropagation(); assignToDayView('${t.id}')" class="chip on" style="padding:4px 9px;font-size:11px">배정</button>
+                                    </div>
+                                `;
+                            }).join("")}
+                        </div>
+                    </div>
+                `;
+                dayEl.innerHTML = h + quickPullHtml;
+            }
+        }
+
+        function assignToDayView(taskId) {
+            const ds = dayStr();
+            moveTaskToDate(taskId, ds);
+            const t = APP_STATE.tasks.find(x => x.id === taskId);
+            if (t) delete t.start;
+            saveState(false);
+            showToast(`${ds.slice(5)} 일정에 추가했습니다.`);
+        }
+
+        function dropToTodayHour(ev, ds, hour) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            ev.currentTarget.classList.remove("drag-over-cell");
+            let taskId = uiState.draggedTaskId || ev.dataTransfer.getData("text/plain");
+            if (taskId && taskId.startsWith("BLK-")) taskId = taskId.slice(4);
+            const task = APP_STATE.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            if (task.date !== ds) moveTaskToDate(task.id, ds);
+            task.start = Number(hour);
+            uiState.draggedTaskId = null;
+            saveState(false);
+            showToast(`${fmtT(hour)} 시작 시각으로 이동했습니다.`);
+        }
+
+        function clickTodayHour(ds, hour) {
+            if (uiState.selectedBacklogTaskId) {
+                const task = APP_STATE.tasks.find(t => t.id === uiState.selectedBacklogTaskId);
+                if (task) {
+                    if (task.date !== ds) moveTaskToDate(task.id, ds);
+                    task.start = Number(hour);
+                    uiState.selectedBacklogTaskId = null;
+                    saveState(false);
+                    showToast(`${fmtT(hour)} 시각에 배정되었습니다.`);
+                    return;
+                }
+            }
+        }
+
+        function dropOnDayCard(ev, targetTaskId) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            ev.currentTarget.classList.remove("drag-over-cell");
+            let srcId = uiState.draggedTaskId || ev.dataTransfer.getData("text/plain");
+            if (srcId && srcId.startsWith("BLK-")) srcId = srcId.slice(4);
+            if (!srcId || srcId === targetTaskId) return;
+            const srcTask = APP_STATE.tasks.find(t => t.id === srcId);
+            const tgtTask = APP_STATE.tasks.find(t => t.id === targetTaskId);
+            if (!srcTask || !tgtTask) return;
+            const ds = dayStr();
+            if (srcTask.date !== ds) moveTaskToDate(srcTask.id, ds);
+
+            const sSlot = DAYLAY.get(srcTask.id) || { s: Number(APP_STATE.dayStart ?? 9) };
+            const tSlot = DAYLAY.get(tgtTask.id) || { s: Number(APP_STATE.dayStart ?? 9) + 2 };
+            srcTask.start = tSlot.s;
+            tgtTask.start = sSlot.s;
+            uiState.draggedTaskId = null;
+            saveState(false);
+            showToast("일정 순서를 맞바꿨습니다.");
+        }
+
+        function dropOnDayNav(ev, deltaDays) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            ev.currentTarget.classList.remove("drag-over-cell");
+            let taskId = uiState.draggedTaskId || ev.dataTransfer.getData("text/plain");
+            if (taskId && taskId.startsWith("BLK-")) taskId = taskId.slice(4);
+            const task = APP_STATE.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            const targetDs = shiftDate(dayStr(), deltaDays);
+            moveTaskToDate(task.id, targetDs);
+            uiState.draggedTaskId = null;
+            saveState(false);
+            showToast(`${targetDs.slice(5)} 날짜로 일정을 이동했습니다.`);
+        }
+
+        // Touch / Pointer drag support on Today's timetable blocks (works on both iPhone touchscreen and Desktop mouse!)
+        let _ttDrag = null;
+        function startTouchDragToday(ev, taskId) {
+            if (ev.button !== undefined && ev.button !== 0) return;
+            if (ev.target && (ev.target.tagName === "BUTTON" || ev.target.tagName === "INPUT")) return;
+            const t = APP_STATE.tasks.find(x => x.id === taskId);
+            if (!t) return;
+            const slot = DAYLAY.get(taskId) || { s: Number(t.start ?? 9), e: Number(t.start ?? 9) + Number(t.estHours || 2) };
+            const blockEl = ev.currentTarget;
+            _ttDrag = {
+                taskId,
+                startY: ev.clientY,
+                origStart: slot.s,
+                curStart: slot.s,
+                dur: Number(t.estHours || 2),
+                moved: false,
+                blockEl
+            };
+            if (blockEl.setPointerCapture && ev.pointerId !== undefined) {
+                try { blockEl.setPointerCapture(ev.pointerId); } catch (e) {}
+            }
+        }
+        function moveTouchDragToday(ev) {
+            if (!_ttDrag) return;
+            const dy = ev.clientY - _ttDrag.startY;
+            if (Math.abs(dy) > 6) _ttDrag.moved = true;
+            if (!_ttDrag.moved) return;
+            ev.preventDefault();
+            const halfHours = Math.round((dy / 56) * 2) / 2;
+            const nextS = Math.max(6, Math.min(23, _ttDrag.origStart + halfHours));
+            _ttDrag.curStart = nextS;
+            const lo = Number(_ttDrag.blockEl.dataset.lo || 7);
+            _ttDrag.blockEl.style.top = ((nextS - lo) * 56 + 2) + "px";
+            _ttDrag.blockEl.style.zIndex = "30";
+            const timeLbl = _ttDrag.blockEl.querySelector(".tt-time-lbl");
+            if (timeLbl) timeLbl.innerText = `${fmtT(nextS)}–${fmtT(nextS + _ttDrag.dur)} (이동 중)`;
+        }
+        function endTouchDragToday(ev) {
+            if (!_ttDrag) return;
+            const info = _ttDrag;
+            _ttDrag = null;
+            if (!info.moved) {
+                openNoteDrawer(info.taskId);
+                return;
+            }
+            const t = APP_STATE.tasks.find(x => x.id === info.taskId);
+            if (t && info.curStart !== info.origStart) {
+                t.start = info.curStart;
+                saveState(false);
+                showToast(`${fmtT(info.curStart)} 시각으로 변경되었습니다.`);
+            } else {
+                renderDayView();
+            }
+        }
 
         function dayCard(t) {
             const done = t.status === "done", st = getCategoryStyle(catKey(t), done);
-            const subs = (t.subtasks || []).map((s, i) => `<label class="flex items-start gap-2 text-xs text-slate-600"><input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSubtaskInline('${t.id}',${i})" class="accent-blue-600 mt-0.5"><span class="${s.done ? "line-through text-slate-400" : ""}">${esc(s.text)}</span></label>`).join("");
-            return `<div class="bg-white rounded-2xl border border-slate-200 p-4 flex gap-3 items-start">
-              <input type="checkbox" ${done ? "checked" : ""} onchange="toggleTaskDone('${t.id}')" class="w-5 h-5 mt-0.5 accent-slate-900 flex-shrink-0">
-              <div class="min-w-0 flex-1 space-y-2">
-                <div onclick="openNoteDrawer('${t.id}')" class="cursor-pointer"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${st.badge}">${esc(modLabel(t) || st.label)}</span>
-                  <p class="font-bold text-sm mt-1 ${done ? "line-through text-slate-400" : ""}">${esc(t.title)}</p>${t.deliverable ? `<p class="text-xs text-slate-500">산출물 · ${esc(t.deliverable)}</p>` : ""}</div>
-                ${done ? "" : `<div class="space-y-1.5">${subs}</div>${t.check ? `<p class="text-[11px] text-emerald-700 bg-emerald-50 rounded-lg px-2 py-1">${esc(t.check)}</p>` : ""}
-                <div class="flex items-center gap-2 flex-wrap"><input type="time" value="${fmtT((DAYLAY.get(t.id) || { s: 9 }).s)}" onchange="setStart('${t.id}', this.value)" class="dt" style="width:100px">${stepperHtml(t)}${t.start != null ? `<button type="button" onclick="setStart('${t.id}', '')" class="chip">자동</button>` : ""}<button type="button" onclick="pushDay('${t.id}')" class="chip">내일로 →</button></div>`}
+            const subs = (t.subtasks || []).map((s, i) => `
+                <label class="flex items-start gap-2.5 text-[13px] text-slate-700 leading-relaxed cursor-pointer py-0.5">
+                    <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSubtaskInline('${t.id}',${i})" class="w-4 h-4 accent-blue-600 mt-1 flex-shrink-0 rounded">
+                    <span class="${s.done ? "line-through text-slate-400" : ""}">${esc(s.text)}</span>
+                </label>`).join("");
+            const slot = DAYLAY.get(t.id) || { s: 9, e: 9 + Number(t.estHours || 2) };
+            return `<div draggable="true" ondragstart="onDragStartTask(event, '${t.id}')"
+                         ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropOnDayCard(event, '${t.id}')"
+                         class="bg-white rounded-2xl border border-slate-200 p-5 flex gap-3.5 items-start cursor-grab active:cursor-grabbing transition-all">
+              <input type="checkbox" ${done ? "checked" : ""} onchange="toggleTaskDone('${t.id}')" class="w-5 h-5 mt-1 accent-slate-900 flex-shrink-0 rounded">
+              <div class="min-w-0 flex-1 space-y-3">
+                <div onclick="openNoteDrawer('${t.id}')" class="cursor-pointer space-y-1.5">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${st.badge}">${esc(modLabel(t) || st.label)}</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-xs font-semibold text-blue-600">${fmtT(slot.s)} – ${fmtT(slot.e)} (${t.estHours}h)</span>
+                  </div>
+                  <p class="font-semibold text-[15.5px] leading-snug text-slate-900 pt-0.5 ${done ? "line-through text-slate-400" : ""}">${esc(t.title)}</p>
+                  ${t.deliverable ? `<p class="text-[13px] text-slate-500 leading-relaxed">산출물 · <span class="text-slate-700 font-medium">${esc(t.deliverable)}</span></p>` : ""}
+                </div>
+                ${done ? "" : `
+                ${subs ? `<div class="space-y-1.5 bg-slate-50/80 rounded-xl p-3.5">${subs}</div>` : ""}
+                ${t.check ? `<p class="text-xs text-emerald-800 bg-emerald-50/90 rounded-xl px-3.5 py-2 leading-relaxed font-medium">종료 기준: ${esc(t.check)}</p>` : ""}
+                <div class="flex items-center gap-2.5 flex-wrap pt-2 border-t border-slate-100" onclick="event.stopPropagation()">
+                  <input type="time" value="${fmtT(slot.s)}" onchange="setStart('${t.id}', this.value)" class="dt" style="width:110px">
+                  ${stepperHtml(t)}
+                  ${t.start != null ? `<button type="button" onclick="setStart('${t.id}', '')" class="chip">자동 시각</button>` : ""}
+                  <button type="button" onclick="pushDay('${t.id}')" class="chip">내일로 →</button>
+                </div>`}
               </div></div>`;
         }
         function renderDayView() {
             const box = document.getElementById("day-body"); if (!box) return;
             const ds = dayStr(), ts = formatDateYMD(todayDate()), d = new Date(ds + "T00:00:00");
-            const list = APP_STATE.tasks.filter(t => t.date === ds).sort((a, b) => (a.status === "done") - (b.status === "done") || (a.day || 99) - (b.day || 99));
+            const list = APP_STATE.tasks.filter(t => t.date === ds).sort((a, b) => (a.status === "done") - (b.status === "done") || (a.start ?? 99) - (b.start ?? 99) || (a.day || 99) - (b.day || 99));
             DAYLAY = layoutDay(ds, list);
             const open = list.filter(t => t.status !== "done"), used = open.reduce((s, t) => s + Number(t.estHours || 0), 0);
-            const cap = Number(APP_STATE.dailyCapHours || 4), over = used > cap;
-            const late = APP_STATE.tasks.filter(t => t.status !== "done" && t.category === "project" && t.date < ts).length;
-            const gc = (APP_STATE.gcalEvents || []).filter(e => e.date === ds).map(e => `<span class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-800">${esc(e.title)}</span>`).join("");
+            const avail = getDayAvailability(ds);
+            const cap = avail.effectiveCap, over = used + avail.gcalHours > cap;
+            const late = APP_STATE.tasks.filter(t => t.status !== "done" && t.category === "project" && t.date && t.date < ts).length;
+            const gc = (APP_STATE.gcalEvents || []).filter(e => e.date === ds).map(e => `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800">Google · ${esc(e.title)}</span>`).join("");
             const next = APP_STATE.tasks.filter(t => t.status !== "done" && t.date > ds).sort((a, b) => a.date.localeCompare(b.date) || (a.day || 99) - (b.day || 99)).slice(0, 4);
-            box.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
-                <div class="flex items-center justify-between"><div class="flex gap-1"><button type="button" class="chip" onclick="setDay(-1)">‹</button><button type="button" class="chip ${ds === ts ? "on" : ""}" onclick="setDay(0)">오늘</button><button type="button" class="chip" onclick="setDay(1)">›</button></div><span class="text-xs text-slate-400">${list.length - open.length}/${list.length} 완료</span></div>
-                <h2 class="text-2xl font-extrabold tracking-tight">${d.getMonth() + 1}월 ${d.getDate()}일 <span class="text-slate-400 text-base font-bold">${DOW[d.getDay()]}요일</span></h2>
+            box.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <div class="flex gap-1.5">
+                    <button type="button" class="chip" onclick="setDay(-1)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropOnDayNav(event, -1)" title="일정을 여기로 끌어서 어제로 이동">‹ 어제</button>
+                    <button type="button" class="chip ${ds === ts ? "on" : ""}" onclick="setDay(0)">오늘</button>
+                    <button type="button" class="chip" onclick="setDay(1)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropOnDayNav(event, 1)" title="일정을 여기로 끌어서 내일로 이동">내일 ›</button>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="date" value="${ds}" onchange="goDay(this.value)" class="dt" style="width:130px">
+                    <span class="text-xs text-slate-500 font-medium">${list.length - open.length}/${list.length} 완료</span>
+                  </div>
+                </div>
+                <div class="flex items-baseline justify-between flex-wrap gap-2">
+                  <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">${d.getMonth() + 1}월 ${d.getDate()}일 <span class="text-slate-400 text-base font-semibold ml-1">${DOW[d.getDay()]}요일 (${avail.isWeekend ? '주말' : '주중'})</span></h2>
+                  <span class="text-xs text-slate-400">막대를 위아래로 끌어서 시각 변경</span>
+                </div>
                 ${timetableHtml(ds, d)}
-                <p class="text-xs ${over ? "text-rose-600 font-bold" : "text-slate-500"}">남은 ${used}h / 하루 한도 ${cap}h${over ? " · 한도 초과, 일부를 내일로 미루세요" : ""}</p>
-                ${gc ? `<div class="flex flex-wrap gap-1.5">${gc}</div>` : ""}</div>
-              ${late ? `<div class="rounded-2xl bg-amber-50 border border-amber-200 p-3 flex items-center justify-between gap-2 text-xs text-amber-800 font-semibold"><span>지난 SOP ${late}건이 밀려 있어요</span><button type="button" onclick="rolloverOverdueTasks()" class="chip">오늘로 당기기</button></div>` : ""}
-              ${list.length ? list.map(dayCard).join("") : `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">이 날은 예정된 일정이 없어요 </div>`}
-              ${next.length ? `<p class="text-xs font-bold text-slate-400 pt-2">다음 예정</p>${next.map(t => `<div onclick="goDay('${t.date}')" class="bg-white rounded-xl border border-slate-200 px-3 py-2.5 flex justify-between gap-2 cursor-pointer text-xs"><span class="font-semibold truncate">${esc(t.title)}</span><span class="text-slate-400 flex-shrink-0">${t.date.slice(5)} · ${t.estHours}h</span></div>`).join("")}` : ""}`;
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                  <span class="${over ? "text-rose-600 font-semibold" : "text-slate-600"}">배정된 할 일 <b>${used}h</b>${avail.gcalHours ? ` + Google 일정 <b>${avail.gcalHours}h</b>` : ""} / 이 날 가용 한도 <b>${cap}h</b>${over ? " · 가용 한도 초과" : ""}</span>
+                  <span class="text-slate-400">남은 가용 시간 ${Math.max(0, cap - used - avail.gcalHours)}h</span>
+                </div>
+                ${gc ? `<div class="flex flex-wrap gap-2 pt-1">${gc}</div>` : ""}</div>
+              ${late ? `<div class="rounded-2xl bg-amber-50 border border-amber-200 p-3.5 flex items-center justify-between gap-2 text-xs text-amber-800 font-semibold"><span>지난 미완료 SOP ${late}건이 남아 있습니다</span><button type="button" onclick="rolloverOverdueTasks()" class="chip">오늘로 당기기</button></div>` : ""}
+              <div class="space-y-3.5">
+                ${list.length ? list.map(dayCard).join("") : `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToTodayHour(event, '${ds}', ${Number(APP_STATE.dayStart ?? 9)})" class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">이 날은 예정된 일정이 없습니다. 우측 보관함에서 일정을 끌어오거나 [+ 일정 추가]를 눌러보세요.</div>`}
+              </div>
+              ${next.length ? `<div class="space-y-2 pt-2"><p class="text-xs font-semibold text-slate-500">다음 예정 (누르면 해당 날짜로 이동)</p>${next.map(t => `<div onclick="goDay('${t.date}')" class="bg-white rounded-xl border border-slate-200 px-4 py-3 flex justify-between items-center gap-3 cursor-pointer text-[13px] hover:bg-slate-50"><span class="font-medium text-slate-800 truncate">${esc(t.title)}</span><span class="text-xs text-slate-400 flex-shrink-0">${t.date.slice(5)} · ${t.estHours}h</span></div>`).join("")}</div>` : ""}`;
         }
 
-        // ===== v6: 구매 구분 · 하루 시간표 =====
+        // ===== v6: 구매 구분 · 하루 시간표 (Drag & Drop 및 Google 일정 시간대 회피 지원) =====
         const BUY_RX = /구매|발주|주문|구입/;
         function isBuy(t) { return t.buy !== undefined ? !!t.buy : BUY_RX.test((t.title || "") + (t.deliverable || "")); }
         function catKey(t) { if (isBuy(t)) return "buy"; const c = t.category || "project"; return c === "project" ? "proj:" + (t.projectId || "P1") : c; }
@@ -3484,37 +4250,98 @@ Script.complete();`;
             if (!v) delete t.start; else { const [h, m] = v.split(":").map(Number); t.start = h + m / 60; }
             saveState(false);
         }
-        function setDayStart(v) { APP_STATE.dayStart = Number(v); saveState(false); }
-        // 시작 시각이 정해진 일정은 고정, 나머지는 시작 시각부터 강의·고정 일정을 피해 순서대로 배치
+        function setDayStart(v) {
+            APP_STATE.dayStart = Number(v);
+            const ds = dayStr();
+            APP_STATE.tasks.filter(t => t.date === ds && t.category === "project").forEach(t => { delete t.start; });
+            saveState(false);
+        }
+        // 시작 시각이 정해진 일정, 수강 강의, Google 달력 시간 지정 일정을 먼저 피해서 순서대로 배치
         function layoutDay(ds, list) {
             const dow = (new Date(ds + "T00:00:00").getDay() + 6) % 7, occ = [], res = new Map();
-            if (APP_STATE.showLectures) (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === dow).forEach(l => occ.push([l.startHour, l.startHour + l.duration]));
-            list.filter(t => t.start != null).forEach(t => { const s = Number(t.start), e = s + Number(t.estHours || 1); occ.push([s, e]); res.set(t.id, { s, e }); });
+            if (APP_STATE.showLectures || APP_STATE.avoidGcalAndLectures !== false) {
+                if (dow >= 0 && dow <= 4) {
+                    (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === dow).forEach(l => occ.push([l.startHour, l.startHour + l.duration]));
+                }
+            }
+            if (APP_STATE.avoidGcalAndLectures !== false) {
+                (APP_STATE.gcalEvents || []).filter(e => e.date === ds).forEach(ev => {
+                    const p = parseGcalTimeSlot(ev);
+                    if (p && p.s != null && p.e != null) occ.push([p.s, p.e]);
+                });
+            }
+            list.filter(t => t.start != null).forEach(t => {
+                const s = Number(t.start), e = s + Number(t.estHours || 1);
+                occ.push([s, e]);
+                res.set(t.id, { s, e });
+            });
             let cur = Number(APP_STATE.dayStart ?? 9);
             list.filter(t => t.start == null).forEach(t => {
-                const h = Number(t.estHours || 1); let s = cur;
-                for (let i = 0; i < 60; i++) { const hit = occ.find(([a, b]) => s < b && s + h > a); if (!hit) break; s = hit[1]; }
-                res.set(t.id, { s, e: s + h }); occ.push([s, s + h]); cur = s + h;
+                const h = Number(t.estHours || 1);
+                let s = cur;
+                for (let i = 0; i < 60; i++) {
+                    const hit = occ.find(([a, b]) => s < b && s + h > a);
+                    if (!hit) break;
+                    s = hit[1];
+                }
+                res.set(t.id, { s, e: s + h });
+                occ.push([s, s + h]);
+                cur = s + h;
             });
             return res;
         }
         function timetableHtml(ds, d) {
-            const H = 44, dow = (d.getDay() + 6) % 7, lec = APP_STATE.showLectures ? (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === dow) : [];
-            let lo = 7, hi = 24;
+            const H = 56, dow = (d.getDay() + 6) % 7;
+            const lec = APP_STATE.showLectures ? (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === dow) : [];
+            const gcalTimed = (APP_STATE.gcalEvents || []).filter(e => e.date === ds).map(e => ({ ev: e, slot: parseGcalTimeSlot(e) })).filter(x => x.slot && x.slot.s != null);
+            let lo = 7, hi = 23;
             DAYLAY.forEach(v => { lo = Math.min(lo, Math.floor(v.s)); hi = Math.max(hi, Math.ceil(v.e)); });
             lec.forEach(l => { lo = Math.min(lo, Math.floor(l.startHour)); });
-            hi = Math.min(hi, 30);
+            gcalTimed.forEach(g => { lo = Math.min(lo, Math.floor(g.slot.s)); hi = Math.max(hi, Math.ceil(g.slot.e)); });
+            hi = Math.min(Math.max(hi, 22), 26);
             const top = h => (h - lo) * H;
-            let grid = ""; for (let h = lo; h <= hi; h++) grid += `<div class="tt-l" style="top:${top(h)}px"></div><span class="tt-h" style="top:${top(h)}px">${pad2(h % 24)}</span>`;
-            const lecs = lec.map(l => `<div class="absolute rounded-lg px-2 py-1 text-[11px] text-slate-500 overflow-hidden" style="left:50px;right:0;top:${top(l.startHour) + 1}px;height:${l.duration * H - 2}px;background:rgba(118,118,128,.14)">${l.title}<br>${fmtT(l.startHour)}–${fmtT(l.startHour + l.duration)}</div>`).join("");
+            let grid = "";
+            for (let h = lo; h < hi; h++) {
+                grid += `
+                    <div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToTodayHour(event, '${ds}', ${h})"
+                         onclick="clickTodayHour('${ds}', ${h})"
+                         class="absolute left-[52px] right-0 border-t border-slate-200/70 hover:bg-blue-50/40 transition-colors cursor-pointer"
+                         style="top:${top(h)}px;height:${H}px" title="${pad2(h % 24)}:00에 배정"></div>
+                    <span class="tt-h select-none" style="top:${top(h)}px">${pad2(h % 24)}:00</span>
+                `;
+            }
+            grid += `<div class="tt-l" style="top:${top(hi)}px"></div>`;
+            const lecs = lec.map(l => `<div class="absolute rounded-xl px-3 py-1.5 text-xs text-slate-600 leading-snug overflow-hidden pointer-events-none" style="left:56px;right:6px;top:${top(l.startHour) + 2}px;height:${Math.max(32, l.duration * H - 4)}px;background:rgba(118,118,128,.13)"><b class="font-semibold">${esc(l.title)}</b> · ${fmtT(l.startHour)}–${fmtT(l.startHour + l.duration)}</div>`).join("");
+            const gcalBlocks = gcalTimed.map(({ ev, slot }) => `<div class="absolute rounded-xl border border-emerald-300 bg-emerald-50/90 text-emerald-900 px-3 py-1.5 text-xs leading-snug overflow-hidden pointer-events-none" style="left:56px;right:6px;top:${top(slot.s) + 2}px;height:${Math.max(32, (slot.e - slot.s) * H - 4)}px"><b class="font-semibold">Google · ${esc(ev.title)}</b> <span class="text-[11px] opacity-75 ml-1">${fmtT(slot.s)}–${fmtT(slot.e)}</span></div>`).join("");
             const blocks = APP_STATE.tasks.filter(t => t.date === ds).map(t => {
                 const v = DAYLAY.get(t.id); if (!v) return "";
                 const st = getCategoryStyle(catKey(t), t.status === "done");
-                return `<div onclick="openNoteDrawer('${t.id}')" class="absolute rounded-lg border px-2 py-1 text-[11px] overflow-hidden cursor-pointer ${st.pill}" style="left:50px;right:0;top:${top(v.s) + 1}px;height:${Math.max(26, (v.e - v.s) * H - 2)}px"><span class="font-medium">${esc(t.title)}</span><br><span class="opacity-70">${fmtT(v.s)}–${fmtT(v.e)}</span></div>`;
+                return `<div draggable="true"
+                             ondragstart="onDragStartTask(event, '${t.id}')"
+                             ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToTodayHour(event, '${ds}', ${Math.floor(v.s)})"
+                             onpointerdown="startTouchDragToday(event, '${t.id}')"
+                             onpointermove="moveTouchDragToday(event)"
+                             onpointerup="endTouchDragToday(event)"
+                             data-lo="${lo}"
+                             style="left:56px;right:6px;top:${top(v.s) + 2}px;height:${Math.max(38, (v.e - v.s) * H - 4)}px;touch-action:none"
+                             class="absolute rounded-xl border px-3.5 py-2 text-[12.5px] leading-snug overflow-hidden cursor-grab active:cursor-grabbing select-none shadow-2xs flex items-center justify-between gap-2.5 ${st.pill}">
+                            <div class="min-w-0 flex-1 space-y-0.5">
+                                <span class="font-semibold truncate block">${esc(t.title)}</span>
+                                <span class="tt-time-lbl text-[11px] opacity-80 block">${fmtT(v.s)} – ${fmtT(v.e)} (${t.estHours}h)</span>
+                            </div>
+                            <span class="text-xs opacity-50 px-1 flex-shrink-0">⋮⋮</span>
+                        </div>`;
             }).join("");
-            const now = new Date(), nowLine = ds === formatDateYMD(todayDate()) ? `<div class="absolute" style="left:46px;right:0;top:${top(now.getHours() + now.getMinutes() / 60)}px;border-top:1.5px solid #ff3b30"></div>` : "";
-            return `<div class="flex items-center justify-between text-xs text-slate-500"><span>하루 시간표</span><label class="flex items-center gap-2">시작 시각<select onchange="setDayStart(this.value)" class="dt" style="width:76px">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map(h => `<option value="${h}" ${h === Number(APP_STATE.dayStart ?? 9) ? "selected" : ""}>${h}시</option>`).join("")}</select></label></div>
-              <div class="relative" style="height:${(hi - lo) * H}px">${grid}${lecs}${blocks}${nowLine}</div>`;
+            const now = new Date(), nowLine = ds === formatDateYMD(todayDate()) ? `<div class="absolute pointer-events-none" style="left:52px;right:0;top:${top(now.getHours() + now.getMinutes() / 60)}px;border-top:1.5px solid #ff3b30"></div>` : "";
+            return `<div class="flex items-center justify-between text-xs text-slate-600">
+                        <span class="font-medium">하루 시간표 (끌어서 시각 이동 · Google 일정 자동 회피)</span>
+                        <label class="flex items-center gap-2">기본 시작 시각
+                            <select onchange="setDayStart(this.value)" class="dt" style="width:80px">${[6, 7, 8, 9, 10, 11, 12, 13, 14].map(h => `<option value="${h}" ${h === Number(APP_STATE.dayStart ?? 9) ? "selected" : ""}>${h}시</option>`).join("")}</select>
+                        </label>
+                    </div>
+                    <div class="max-h-[420px] sm:max-h-[520px] overflow-y-auto scrollbar-thin rounded-2xl bg-slate-50/50 p-2.5 border border-slate-100">
+                        <div class="relative" style="height:${(hi - lo) * H}px">${grid}${lecs}${gcalBlocks}${blocks}${nowLine}</div>
+                    </div>`;
         }
 
         // ===== v7 & v8: 여러 Project · 내 분류(인라인 생성/수정 UI) · iPhone/Desktop 분리 최적화 =====
@@ -4121,7 +4948,7 @@ Script.complete();`;
             if (!e) return;
 
             const catTagsHtml = APP_STATE.categories.length === 0
-                ? `<span class="text-xs text-slate-400 py-1">추가된 분류가 없습니다. 오른쪽 <b>[+ 분류 추가]</b> 단추을 눌러 만들어 보세요!</span>`
+                ? `<span class="text-xs text-slate-400 py-1">추가된 분류가 없습니다. 오른쪽 <b>[+ 분류 추가]</b> 단추를 눌러 만들어 보세요!</span>`
                 : APP_STATE.categories.map(c => {
                     const hex = (PAL_MAP[c.color] || PAL_MAP.teal).hex;
                     const count = APP_STATE.tasks.filter(t => t.category === c.id && t.status !== "done").length;
