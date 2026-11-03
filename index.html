@@ -492,6 +492,29 @@
             border-radius: 999px !important;
             font-weight: 500;
         }
+
+        /* v13 Readability & Accordion Enhancements */
+        .sop-proc-label {
+            color: #1c1c1e;
+            font-weight: 600;
+        }
+        .sop-card-active {
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.45), 0 8px 24px -6px rgba(0, 122, 255, 0.12) !important;
+        }
+        .week-acc-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .week-acc-header:hover {
+            background-color: #fafafc !important;
+        }
+        #focus-timer-bar {
+            background: linear-gradient(90deg, #1c1c1e 0%, #2c2c2e 100%);
+            color: #ffffff;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-[14px] leading-relaxed selection:bg-blue-100 selection:text-blue-900">
@@ -521,6 +544,9 @@
                     <button type="button" id="btn-layout-desktop" onclick="setDeviceLayout('desktop')" class="px-2.5 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition-all">Desktop</button>
                     <button type="button" id="btn-layout-mobile" onclick="setDeviceLayout('mobile')" class="px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all">iPhone</button>
                 </div>
+                <button type="button" onclick="openBackupModal()" class="chip chip-accent" title="자료 보존 문서(JSON) 저장 및 복원">
+                    <span>보존·복원 (Backup)</span>
+                </button>
                 <button type="button" onclick="openGcalModal()" class="chip">
                     <span class="w-2 h-2 rounded-full bg-emerald-500" id="sync-dot"></span>
                     <span id="sync-badge">Google 달력</span>
@@ -529,6 +555,22 @@
             </div>
         </div>
     </header>
+    <!-- Live Focus Timer Bar (Hidden until started) -->
+    <div id="focus-timer-bar" class="hidden sticky top-14 z-30 px-4 py-2.5 text-xs">
+        <div class="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+                <span class="text-slate-300 font-medium">집중 계측 중</span>
+                <strong id="focus-timer-title" class="truncate text-white text-[13px]">DAY 8</strong>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="focus-timer-clock" class="font-mono text-sm font-bold text-emerald-400 px-2.5 py-0.5 rounded-lg bg-white/10">00:00:00</span>
+                <button type="button" id="focus-timer-pause-btn" onclick="togglePauseFocusTimer()" class="px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white font-medium">일시정지</button>
+                <button type="button" onclick="finishFocusTimer(true)" class="px-3 py-1 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold">기록 저장 후 종료</button>
+                <button type="button" onclick="finishFocusTimer(false)" class="px-2 py-1 text-slate-400 hover:text-white">×</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content Area -->
     <main class="flex-grow max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-5">
@@ -701,6 +743,60 @@
 
         <!-- VIEW 5: Portfolio (부족한 상황 DB 및 문서 추출) -->
         <section id="view-portfolio" class="view-section hidden space-y-5">
+            <!-- Dedicated Backup & Restore Card Section -->
+            <div class="bg-white rounded-2xl p-5 space-y-4 border border-blue-200/80">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs font-semibold">안전 보관</span>
+                            <h3 class="font-bold text-base text-slate-900">자료 보존 · 복원 관리 (Backup & Restore)</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">기기를 바꾸거나 초기화되더라도 모든 일정·SOP·과목·기록을 100% 그대로 되살릴 수 있도록 보존 문서(JSON)와 시점 기록을 관리합니다.</p>
+                    </div>
+                    <span class="backup-card-last-status px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">자동 시점 보존 작동 중</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <!-- 1. 보존 문서(JSON) 내보내기 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-blue-600">1. 내 기기에 보존 문서 저장</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">56일 SOP, 일정, 시간표, 과목, 미정 사양, 문제해결 기록 전체를 <code>.json</code> 문서로 즉시 저장합니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button type="button" onclick="exportFullDatabaseJson()" class="btn-main text-xs py-2 px-3.5 flex-1">보존 문서(.json) 내려받기</button>
+                            <button type="button" onclick="exportIcsFile()" class="chip">달력(.ics) 저장</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 보존 문서(JSON) 불러와서 복원 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-emerald-700">2. 보존 문서 불러오기 (즉시 복원)</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">이전에 내려받은 <code>.json</code> 보존 문서를 선택하면 모든 일정과 기록이 그 시점 그대로 복원됩니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <label class="btn-sub text-center cursor-pointer flex-1 py-2 px-3 font-semibold text-slate-800 hover:bg-slate-200/70">
+                                보존 문서(.json) 선택하여 복원
+                                <input type="file" accept=".json,application/json" class="hidden" onchange="importBackupJsonFile(event)">
+                            </label>
+                            <button type="button" onclick="openBackupModal()" class="chip chip-accent">문자열 복원</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. 시점 보존(Snapshot) 및 원격 동기화 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-800">3. 시점 보존본 & 원격 저장소</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">현재 상태를 내부 시점 보관함에 즉시 남기거나 원격 저장소(Firestore)와 강제 동기화합니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button type="button" onclick="createManualSnapshot()" class="chip on flex-1 py-2">현재 상태 시점 보존</button>
+                            <button type="button" onclick="openBackupModal()" class="chip">보존 목록 보기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <div class="lg:col-span-5 bg-white rounded-2xl p-5 space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -731,6 +827,60 @@
 
         <!-- VIEW 6: 요약 (Dashboard) -->
         <section id="view-dashboard" class="view-section hidden space-y-5">
+            <!-- Dedicated Backup & Restore Card Section -->
+            <div class="bg-white rounded-2xl p-5 space-y-4 border border-blue-200/80">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs font-semibold">안전 보관</span>
+                            <h3 class="font-bold text-base text-slate-900">자료 보존 · 복원 관리 (Backup & Restore)</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">기기를 바꾸거나 초기화되더라도 모든 일정·SOP·과목·기록을 100% 그대로 되살릴 수 있도록 보존 문서(JSON)와 시점 기록을 관리합니다.</p>
+                    </div>
+                    <span class="backup-card-last-status px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">자동 시점 보존 작동 중</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <!-- 1. 보존 문서(JSON) 내보내기 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-blue-600">1. 내 기기에 보존 문서 저장</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">56일 SOP, 일정, 시간표, 과목, 미정 사양, 문제해결 기록 전체를 <code>.json</code> 문서로 즉시 저장합니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button type="button" onclick="exportFullDatabaseJson()" class="btn-main text-xs py-2 px-3.5 flex-1">보존 문서(.json) 내려받기</button>
+                            <button type="button" onclick="exportIcsFile()" class="chip">달력(.ics) 저장</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 보존 문서(JSON) 불러와서 복원 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-emerald-700">2. 보존 문서 불러오기 (즉시 복원)</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">이전에 내려받은 <code>.json</code> 보존 문서를 선택하면 모든 일정과 기록이 그 시점 그대로 복원됩니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <label class="btn-sub text-center cursor-pointer flex-1 py-2 px-3 font-semibold text-slate-800 hover:bg-slate-200/70">
+                                보존 문서(.json) 선택하여 복원
+                                <input type="file" accept=".json,application/json" class="hidden" onchange="importBackupJsonFile(event)">
+                            </label>
+                            <button type="button" onclick="openBackupModal()" class="chip chip-accent">문자열 복원</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. 시점 보존(Snapshot) 및 원격 동기화 -->
+                    <div class="p-4 rounded-2xl bg-slate-50/80 space-y-2.5 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-800">3. 시점 보존본 & 원격 저장소</span>
+                            <p class="text-xs text-slate-600 leading-relaxed">현재 상태를 내부 시점 보관함에 즉시 남기거나 원격 저장소(Firestore)와 강제 동기화합니다.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button type="button" onclick="createManualSnapshot()" class="chip on flex-1 py-2">현재 상태 시점 보존</button>
+                            <button type="button" onclick="openBackupModal()" class="chip">보존 목록 보기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="dash-tiles" class="grid grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 <div class="lg:col-span-7 space-y-5">
@@ -849,6 +999,71 @@
                         <input type="text" id="drawer-gap-issue" placeholder="어떤 점이 부족하거나 막혔나요?" class="sm:col-span-2 bg-white rounded-xl px-2.5 py-1.5 text-xs outline-none">
                     </div>
                     <input type="text" id="drawer-gap-solution" placeholder="해결 방법 또는 다음 조치" class="w-full bg-white rounded-xl px-2.5 py-1.5 text-xs outline-none">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup & Restore Manager Modal -->
+    <div id="backup-modal-backdrop" class="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">자료 보존 · 복원 보관함 (Backup & Restore)</h3>
+                    <p class="text-xs text-slate-500">문서(.json) 저장·불러오기, 문자열 복사·붙여넣기, 시점별 자동 보존본 복원을 모두 지원합니다.</p>
+                </div>
+                <button type="button" onclick="closeBackupModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-semibold">×</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-5 text-xs scrollbar-thin">
+                <!-- 1. File Export / Import -->
+                <div class="p-4 rounded-2xl bg-slate-50 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm text-slate-900">1. 보존 문서(.json) 내려받기 및 복원</span>
+                        <span id="backup-modal-last-time" class="text-[11px] text-blue-600 font-medium"></span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">전체 자료를 <code>.json</code> 문서로 기기에 보관해 두면 언제든 1초 만에 완벽히 복원할 수 있습니다.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button type="button" onclick="exportFullDatabaseJson()" class="btn-main text-xs py-2.5">전체 보존 문서(.json) 내려받기</button>
+                        <label class="btn-sub text-center cursor-pointer py-2.5 font-semibold text-slate-800 hover:bg-slate-200/80 flex items-center justify-center">
+                            보존 문서(.json) 불러와서 복원
+                            <input type="file" id="backup-json-file-input" accept=".json,application/json" class="hidden" onchange="importBackupJsonFile(event)">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Local Timestamped Snapshots -->
+                <div class="p-4 rounded-2xl bg-slate-50 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="font-bold text-sm text-slate-900">2. 내부 시점 보존 목록 (최근 10개 자동·수동 보관)</span>
+                            <p class="text-[11px] text-slate-500 mt-0.5">실수로 일정을 지우거나 잘못 배정했을 때 원하는 시점으로 즉시 되돌릴 수 있습니다.</p>
+                        </div>
+                        <button type="button" onclick="createManualSnapshot()" class="chip on">+ 지금 시점 보존</button>
+                    </div>
+                    <div id="backup-snapshots-list" class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin pr-1"></div>
+                </div>
+
+                <!-- 3. Clipboard Code Backup & Restore (Great for iPhone Notes / KakaoTalk) -->
+                <div class="p-4 rounded-2xl bg-slate-50 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-bold text-sm text-slate-900">3. 문자열(Code) 복사 · 붙여넣기 복원</span>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="copyBackupStringToClipboard()" class="chip chip-accent">전체 자료 문자열 복사</button>
+                            <button type="button" onclick="restoreFromBackupStringInput()" class="chip on">붙여넣은 문자열로 복원</button>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500">iPhone 메모장이나 카카오톡 나에게 보내기에 문자열을 복사해 두고, 아래 칸에 붙여넣어 바로 복원할 수도 있습니다.</p>
+                    <textarea id="backup-raw-json-box" rows="3" placeholder="여기에 보존 문자열(JSON)을 붙여넣고 [붙여넣은 문자열로 복원]을 누르세요..." class="w-full bg-white rounded-xl p-3 font-mono text-[11px] text-slate-700 outline-none border border-slate-200/80"></textarea>
+                </div>
+
+                <!-- 4. Cloud Sync Force Push / Pull -->
+                <div class="p-4 rounded-2xl bg-blue-50/60 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <span class="font-bold text-xs text-blue-900">4. 원격 저장소(Firestore) 동기화</span>
+                        <p class="text-[11px] text-blue-700">현재 기기의 자료를 원격 저장소에 즉시 강제 저장합니다.</p>
+                    </div>
+                    <button type="button" onclick="forceCloudSyncNow()" class="chip on">원격 저장소 즉시 저장</button>
                 </div>
             </div>
         </div>
@@ -1853,7 +2068,7 @@
         }
 
         // --- 자동화 및 스키마 마이그레이션 유틸 (기존 1~8주 자료를 상세 SOP로 100% 자동 업그레이드) ---
-        const SCHEMA_VER = 13;
+        const SCHEMA_VER = 14;
         const OLD_W = { "SOP-W03A": [15, 17], "SOP-W03B": [18, 21], "SOP-W04": [22, 28], "SOP-W05": [29, 35], "SOP-W06": [36, 42], "SOP-W07": [43, 49], "SOP-W08": [50, 56] };
         function todayDate() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 
@@ -1918,18 +2133,108 @@
             const last = p.reduce((m, t) => (t.date > m ? t.date : m), "0000");
             return `남은 ${p.reduce((s, t) => s + Number(t.estHours || 0), 0)}h · 예상 종료 ${last.slice(5)}`;
         }
+        function isWeekFolded(w, s) {
+            if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+            if (APP_STATE.foldedWeeks[w] !== undefined) return !!APP_STATE.foldedWeeks[w];
+            // By default, if a week is 100% done (7/7), auto-fold it so the next active week is right at the top!
+            return s && s.n > 0 && s.d === s.n;
+        }
+
+        function toggleSopWeekFold(w) {
+            if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+            const allSop = APP_STATE.tasks.filter(t => t.category === "project" && (t.projectId || "P1") === curProj() && Number(t.week) === Number(w));
+            const s = { d: allSop.filter(t => t.status === "done").length, n: allSop.length };
+            const cur = isWeekFolded(w, s);
+            APP_STATE.foldedWeeks[w] = !cur;
+            saveState(false);
+        }
+
+        function completeAndFoldWeek(w) {
+            if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+            APP_STATE.tasks.forEach(t => {
+                if (t.category === "project" && (t.projectId || "P1") === curProj() && Number(t.week) === Number(w)) {
+                    t.status = "done";
+                    if (t.subtasks) t.subtasks.forEach(st => { st.done = true; });
+                }
+            });
+            if (Number(w) === 1) {
+                APP_STATE.specs.forEach(sp => {
+                    if (!sp.resolved) { sp.value = sp.rec; sp.resolved = true; }
+                });
+            }
+            APP_STATE.foldedWeeks[w] = true;
+            APP_STATE.foldedWeeks[Number(w) + 1] = false;
+            saveState(false);
+            showToast(`${w}주차를 완료 처리하고 접었습니다. ${Number(w) + 1}주차 일정에 바로 집중해 보세요.`);
+        }
+
+        function focusActiveSopWeek() {
+            if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+            const allSop = APP_STATE.tasks.filter(t => t.category === "project" && (t.projectId || "P1") === curProj());
+            let firstOpenWeek = 2;
+            for (let w = 1; w <= 8; w++) {
+                const wkTasks = allSop.filter(t => Number(t.week) === w);
+                if (wkTasks.some(t => t.status !== "done")) {
+                    firstOpenWeek = w;
+                    break;
+                }
+            }
+            for (let w = 1; w <= 8; w++) {
+                APP_STATE.foldedWeeks[w] = (w < firstOpenWeek);
+            }
+            const wf = document.getElementById("sop-week-filter");
+            if (wf) wf.value = "all";
+            saveState(false);
+            showToast(`이전 주차를 접고 ${firstOpenWeek}주차부터 상단에 펼쳤습니다.`);
+        }
+
+        function toggleAllSopWeeks(foldAll) {
+            if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+            for (let w = 1; w <= 8; w++) APP_STATE.foldedWeeks[w] = !!foldAll;
+            saveState(false);
+        }
+
+        function toggleCompactDoneSop() {
+            APP_STATE.compactDoneSop = (APP_STATE.compactDoneSop === false) ? true : false;
+            saveState(false);
+        }
+
+        function toggleExpandSingleSop(taskId) {
+            if (!uiState.expandedSopIds) uiState.expandedSopIds = {};
+            uiState.expandedSopIds[taskId] = !uiState.expandedSopIds[taskId];
+            renderSopRoadmap();
+        }
+
+        function formatProcedureTextHtml(rawText) {
+            const safe = esc(rawText || "");
+            const colonIdx = safe.indexOf(":");
+            if (colonIdx > 0 && colonIdx < 38) {
+                return `<span class="sop-proc-label">${safe.slice(0, colonIdx)}</span><span class="text-slate-600">${safe.slice(colonIdx)}</span>`;
+            }
+            return `<span class="text-slate-700">${safe}</span>`;
+        }
+
         function weekHeaderHtml(w, s) {
-            const pct = Math.round((s.d / s.n) * 100);
+            const pct = s.n ? Math.round((s.d / s.n) * 100) : 0;
+            const folded = isWeekFolded(w, s);
+            const allDone = s.n > 0 && s.d === s.n;
             const wkDays = `DAY ${(w - 1) * 7 + 1}~${w * 7}`;
-            return `<div class="md:col-span-2 bg-white rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 mt-2">
-                <div class="flex items-center gap-2.5">
-                    <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-semibold">${w}주차 (${wkDays})</span>
-                    <span class="font-semibold text-sm text-slate-900">${WEEK_NAMES[w] || ""}</span>
+            const badgeCls = allDone ? "bg-emerald-600 text-white" : "bg-blue-600 text-white";
+            return `<div onclick="toggleSopWeekFold(${w})" class="week-acc-header md:col-span-2 bg-white rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 mt-2 border border-slate-200/80">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 inline-flex items-center justify-center text-xs font-bold">${folded ? "▸" : "▾"}</span>
+                    <span class="px-2.5 py-1 rounded-lg ${badgeCls} text-xs font-semibold">${w}주차 (${wkDays})</span>
+                    <span class="font-semibold text-[15px] text-slate-900 truncate">${WEEK_NAMES[w] || ""}</span>
+                    ${allDone ? `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">완료됨</span>` : ""}
                 </div>
-                <div class="flex items-center gap-3 flex-1 min-w-[200px] max-w-md ml-auto">
-                    <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-600 rounded-full transition-all" style="width:${pct}%"></div></div>
-                    <span class="text-xs font-medium text-slate-500 whitespace-nowrap">${s.d}/${s.n} 완료 (${pct}%)</span>
-                    <select onchange="setWeekHours(${w}, this.value)" class="dt" style="width:84px"><option value="">일괄 시간</option>${[1, 1.5, 2, 2.5, 3, 4, 6].map(v => `<option value="${v}">${v}h 통일</option>`).join("")}</select>
+                <div class="flex items-center gap-2.5 flex-wrap ml-auto" onclick="event.stopPropagation()">
+                    <div class="flex items-center gap-2 min-w-[140px]">
+                        <div class="w-24 sm:w-32 h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${allDone ? 'bg-emerald-500' : 'bg-blue-600'} rounded-full transition-all" style="width:${pct}%"></div></div>
+                        <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">${s.d}/${s.n} (${pct}%)</span>
+                    </div>
+                    ${!allDone ? `<button type="button" onclick="completeAndFoldWeek(${w})" class="chip chip-accent" title="${w}주차를 모두 완료 처리하고 접습니다">${w}주차 완료·접기</button>` : ""}
+                    <select onchange="setWeekHours(${w}, this.value)" class="dt" style="width:86px"><option value="">일괄 시간</option>${[1, 1.5, 2, 2.5, 3, 4, 6].map(v => `<option value="${v}">${v}h 통일</option>`).join("")}</select>
+                    <button type="button" onclick="toggleSopWeekFold(${w})" class="chip">${folded ? "펼치기 ▾" : "접기 ▴"}</button>
                 </div>
             </div>`;
         }
@@ -2042,6 +2347,7 @@
         function forceCloudSyncNow() {
             APP_STATE.updatedAt = Date.now();
             syncScheduledBlocksFromTasks();
+            autoSnapshotIfNeeded();
             try { localStorage.setItem("PROJECT_OS_V3_STATE", JSON.stringify(packState())); } catch (e) {}
             pushCloud().then(ok => {
                 if (ok) showToast("원격 저장소(Firestore)에 즉시 동기화되었습니다.");
@@ -2153,6 +2459,7 @@
         function saveState(showToastFlag = true) {
             APP_STATE.updatedAt = Date.now();
             syncScheduledBlocksFromTasks();
+            autoSnapshotIfNeeded();
             let raw = "";
             try {
                 raw = JSON.stringify(packState());
@@ -3067,7 +3374,10 @@
                                 ${t.deliverable ? `<p class="text-xs text-slate-500">장소·산출물: ${esc(t.deliverable)}</p>` : ''}
                             </div>
                         </div>
-                        <button type="button" onclick="openNoteDrawer('${t.id}')" class="chip flex-shrink-0">상세</button>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            ${!isDone && t.date ? `<button type="button" onclick="splitAcademicPrep('${t.id}')" class="chip chip-accent" title="마감/시험 전 D-3, D-2, D-1 대비 학습 일정을 달력에 자동 생성합니다">대비 분할</button>` : ""}
+                            <button type="button" onclick="openNoteDrawer('${t.id}')" class="chip">상세</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3095,6 +3405,15 @@
         function setSopWeekFilter(val) {
             const wf = document.getElementById("sop-week-filter");
             if (wf) wf.value = String(val);
+            if (val !== "all") {
+                if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+                APP_STATE.foldedWeeks[Number(val)] = false;
+            }
+            renderSopRoadmap();
+        }
+
+        function setSopSearchQuery(q) {
+            uiState.sopSearch = (q || "").trim();
             renderSopRoadmap();
         }
 
@@ -3102,13 +3421,21 @@
             const container = document.getElementById("sop-subview-roadmap");
             if (!container) return;
             const wf = document.getElementById("sop-week-filter"), filterVal = wf && curProj() === "P1" ? wf.value : "all";
+            const qStr = (uiState.sopSearch || "").toLowerCase();
 
             const allSop = APP_STATE.tasks.filter(t => t.category === "project" && (t.projectId || "P1") === curProj());
-            const sopList = allSop.filter(t => filterVal === "all" || String(t.week) === String(filterVal));
+            const sopList = allSop.filter(t => {
+                if (filterVal !== "all" && String(t.week) !== String(filterVal)) return false;
+                if (qStr) {
+                    const hay = `${t.title || ""} ${t.deliverable || ""} ${t.check || ""} ${t.notes || ""} ${(t.subtasks || []).map(s => s.text).join(" ")}`.toLowerCase();
+                    if (!hay.includes(qStr)) return false;
+                }
+                return true;
+            });
 
             sopList.sort((a, b) => (a.day || 0) - (b.day || 0) || (a.date || "").localeCompare(b.date || ""));
             if (!sopList.length) {
-                container.innerHTML = '<div class="md:col-span-2 bg-white rounded-2xl p-10 text-center text-sm text-slate-400">등록된 일정이 없습니다. 상단 [+ 할 일 추가] 단추로 추가해 보세요.</div>';
+                container.innerHTML = `<div class="md:col-span-2 bg-white rounded-2xl p-10 text-center text-sm text-slate-400">${qStr ? `'${esc(uiState.sopSearch)}' 검색 결과가 없습니다.` : '등록된 일정이 없습니다. 상단 [+ 할 일 추가] 단추로 추가해 보세요.'}</div>`;
                 return;
             }
             const wkStat = {};
@@ -3118,20 +3445,46 @@
                 if (t.status === "done") s.d++;
             });
 
-            // Quick week selector pills for P1 (1~8주차)
+            const compactDone = APP_STATE.compactDoneSop !== false;
+            const nextActiveTask = allSop.find(t => t.status !== "done");
+            const nextActiveId = nextActiveTask ? nextActiveTask.id : null;
+
             let weekPillsHtml = "";
             if (curProj() === "P1") {
                 const totalDone = allSop.filter(t => t.status === "done").length;
                 const totalPct = allSop.length ? Math.round((totalDone / allSop.length) * 100) : 0;
+                const w1Done = (wkStat[1] || { d: 0, n: 7 }).d === (wkStat[1] || { d: 0, n: 7 }).n;
+                const w1Folded = isWeekFolded(1, wkStat[1] || { d: 0, n: 7 });
+
                 weekPillsHtml = `
-                    <div class="md:col-span-2 bg-white rounded-2xl p-4 space-y-3">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="md:col-span-2 bg-white rounded-2xl p-5 space-y-3.5">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <h3 class="font-semibold text-sm text-slate-900">8주 통합 엔지니어링 SOP 진행 현황 (DAY 1 ~ DAY 56)</h3>
-                                <p class="text-xs text-slate-500 mt-0.5">1~3주차(기획·순환 Module 설계·제작)와 동일한 수준으로 4~8주차(고분자 Cartridge·자동제어·72h 장기운전·Portfolio) 세부 절차 및 종료 기준이 수록되어 있습니다.</p>
+                                <h3 class="font-bold text-base text-slate-900">8주 통합 엔지니어링 SOP 진행 현황 (DAY 1 ~ DAY 56)</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">완료된 주차나 일자를 접어 현재 진행할 2주차 이후 일정에 바로 집중할 수 있습니다.</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">전체 ${totalDone}/${allSop.length}일 완료 (${totalPct}%)</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${!w1Done ? `<button type="button" onclick="completeAndFoldWeek(1)" class="chip on">1주차 완료 처리 후 접기 (2주차 집중)</button>` : (!w1Folded ? `<button type="button" onclick="toggleSopWeekFold(1)" class="chip on">1주차 접기 ▴</button>` : `<button type="button" onclick="toggleSopWeekFold(1)" class="chip">1주차 펼치기 ▾</button>`)}
+                                <button type="button" onclick="focusActiveSopWeek()" class="chip chip-accent">현재 진행 주차만 펼치기</button>
+                                <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">전체 ${totalDone}/${allSop.length}일 완료 (${totalPct}%)</span>
+                            </div>
                         </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="flex items-center gap-1.5 text-xs text-slate-700 font-medium cursor-pointer bg-slate-50 px-3 py-1.5 rounded-full">
+                                    <input type="checkbox" ${compactDone ? "checked" : ""} onchange="toggleCompactDoneSop()" class="w-3.5 h-3.5 accent-blue-600 rounded">
+                                    <span>완료된 일자(DAY) 한 줄로 축소</span>
+                                </label>
+                                <button type="button" onclick="toggleAllSopWeeks(false)" class="chip">전체 주차 펼치기</button>
+                                <button type="button" onclick="toggleAllSopWeeks(true)" class="chip">전체 주차 접기</button>
+                            </div>
+                            <div class="relative flex-1 min-w-[200px] max-w-xs">
+                                <input type="text" value="${esc(uiState.sopSearch || '')}" oninput="setSopSearchQuery(this.value)" placeholder="SOP 검색 (예: Venturi, O-ring, pH, 유량...)" class="w-full bg-slate-50 rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/30">
+                                ${uiState.sopSearch ? `<button type="button" onclick="setSopSearchQuery('')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold">×</button>` : ""}
+                            </div>
+                        </div>
+
                         <div class="flex flex-nowrap sm:flex-wrap gap-1.5 pt-1 overflow-x-auto scrollbar-thin pb-1">
                             <button type="button" onclick="setSopWeekFilter('all')" class="chip ${filterVal === 'all' ? 'on' : ''}">전체 (1~8주)</button>
                             ${[1, 2, 3, 4, 5, 6, 7, 8].map(w => {
@@ -3146,38 +3499,71 @@
 
             let lastWk = null;
             container.innerHTML = weekPillsHtml + sopList.map(t => {
-                const head = isMain(t) && t.week !== lastWk ? weekHeaderHtml(t.week, wkStat[t.week] || { d: 0, n: 7 }) : "";
-                lastWk = t.week;
+                const wk = t.week || 1;
+                const stWk = wkStat[wk] || { d: 0, n: 7 };
+                const head = isMain(t) && wk !== lastWk ? weekHeaderHtml(wk, stWk) : "";
+                lastWk = wk;
+
+                // If this week is folded (and we are viewing 'all' without an active search query), hide its cards!
+                if (isMain(t) && filterVal === "all" && !qStr && isWeekFolded(wk, stWk)) {
+                    return head;
+                }
+
                 const isDone = t.status === "done";
+                const isExpanded = uiState.expandedSopIds && uiState.expandedSopIds[t.id];
+                const isNextActive = t.id === nextActiveId;
+
+                // Compact 1-line card for completed days so completed items in Week 1 don't push Week 2 down
+                if (isDone && compactDone && !isExpanded && !qStr) {
+                    return head + `
+                        <div class="bg-white/80 rounded-2xl px-4 py-3 border border-slate-200/70 flex items-center justify-between gap-2 hover:bg-white transition-all">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                <input type="checkbox" checked onchange="toggleTaskDone('${t.id}')" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer flex-shrink-0">
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-semibold flex-shrink-0">완료</span>
+                                <span onclick="toggleExpandSingleSop('${t.id}')" class="text-[13.5px] font-medium text-slate-500 line-through truncate cursor-pointer hover:text-slate-800">${esc(t.title)}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <span class="text-[11px] text-slate-400 hidden sm:inline">${t.date ? t.date.slice(5) : ""}</span>
+                                <button type="button" onclick="toggleExpandSingleSop('${t.id}')" class="chip" style="padding:3px 9px;font-size:11px">펼치기 ▾</button>
+                                <button type="button" onclick="openNoteDrawer('${t.id}')" class="chip" style="padding:3px 9px;font-size:11px">기록</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 const subDone = (t.subtasks || []).filter(s => s.done).length;
                 const subTotal = (t.subtasks || []).length;
                 return head + `
-                    <div class="bg-white rounded-2xl p-4 transition-all flex flex-col justify-between gap-3">
-                        <div class="space-y-2.5">
+                    <div class="bg-white rounded-2xl p-5 transition-all flex flex-col justify-between gap-3.5 ${isNextActive ? 'sop-card-active' : ''}">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')" class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
-                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">${isMain(t) ? (t.week || 1) + "주차 · DAY " + t.day : "일정"}</span>
+                                    <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${isNextActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}">${isMain(t) ? (t.week || 1) + "주차 · DAY " + t.day : "일정"}${isNextActive ? " · 현재 차례" : ""}</span>
                                     <input type="date" value="${t.date}" onchange="setTaskDate('${t.id}', this.value)" class="dt">${stepperHtml(t)}
                                 </div>
-                                <button type="button" onclick="openNoteDrawer('${t.id}')" class="text-xs font-semibold text-blue-600 hover:underline">상세·기록 (${subDone}/${subTotal}) ›</button>
+                                <div class="flex items-center gap-1.5">
+                                    ${isDone && compactDone ? `<button type="button" onclick="toggleExpandSingleSop('${t.id}')" class="chip" style="padding:4px 9px;font-size:11px">접기 ▴</button>` : ""}
+                                    ${!isDone ? `<button type="button" onclick="startFocusTimer('${t.id}')" class="chip chip-accent" style="padding:4px 9px;font-size:11px" title="이 작업 집중 시간 계측 시작">▶ 집중</button>` : ""}
+                                    <button type="button" onclick="openNoteDrawer('${t.id}')" class="text-xs font-semibold text-blue-600 hover:underline px-1">상세·기록 (${subDone}/${subTotal}) ›</button>
+                                </div>
                             </div>
-                            <h4 onclick="openNoteDrawer('${t.id}')" class="font-semibold text-[14px] text-slate-900 cursor-pointer leading-snug ${isDone ? 'line-through text-slate-400' : ''}">${esc(t.title)}</h4>
-                            <div class="space-y-1.5 pt-1 bg-slate-50/70 rounded-xl p-3">
+                            <h4 onclick="openNoteDrawer('${t.id}')" class="font-bold text-[15.5px] text-slate-900 cursor-pointer leading-snug ${isDone ? 'line-through text-slate-400' : ''}">${esc(t.title)}</h4>
+                            <div class="space-y-2 bg-slate-50/80 rounded-xl p-3.5">
                                 ${(t.subtasks || []).map((st, sIdx) => `
-                                    <label class="flex items-start gap-2 text-xs text-slate-700 cursor-pointer leading-relaxed">
-                                        <input type="checkbox" ${st.done ? 'checked' : ''} onchange="toggleSubtaskInline('${t.id}', ${sIdx})" class="accent-blue-600 rounded mt-0.5 flex-shrink-0">
-                                        <span class="${st.done ? 'line-through text-slate-400' : ''}">${esc(st.text)}</span>
+                                    <label class="flex items-start gap-2.5 text-[13px] text-slate-700 cursor-pointer leading-relaxed py-0.5">
+                                        <input type="checkbox" ${st.done ? 'checked' : ''} onchange="toggleSubtaskInline('${t.id}', ${sIdx})" class="w-4 h-4 accent-blue-600 rounded mt-1 flex-shrink-0">
+                                        <span class="${st.done ? 'line-through text-slate-400' : ''}">${formatProcedureTextHtml(st.text)}</span>
                                     </label>
                                 `).join("")}
                             </div>
-                            ${t.notes ? `<div class="text-[11.5px] text-slate-600 bg-slate-50 rounded-xl px-3 py-2 leading-relaxed"><span class="font-semibold text-slate-700">설계·실험 지침:</span> ${esc(t.notes)}</div>` : ''}
+                            ${t.notes ? `<div class="text-[12.5px] text-slate-600 bg-slate-50 rounded-xl px-3.5 py-2.5 leading-relaxed"><span class="font-semibold text-slate-800">설계·실험 지침:</span> ${esc(t.notes)}</div>` : ''}
                         </div>
-                        <div class="space-y-2 pt-1">
-                            ${t.check ? `<p class="text-[11.5px] text-emerald-800 bg-emerald-50/90 rounded-xl px-3 py-1.5 font-medium leading-snug">종료 기준: ${esc(t.check)}</p>` : ''}
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[11.5px] text-slate-500">
-                                <span class="truncate">산출물: <strong class="text-slate-800">${esc(t.deliverable || '-')}</strong></span>
-                                ${t.gapIssue ? `<span class="text-rose-600 font-semibold flex-shrink-0">${esc(t.gapType)}</span>` : ''}
+                        <div class="space-y-2.5 pt-1">
+                            ${t.check ? `<p class="text-[12.5px] text-emerald-800 bg-emerald-50/90 rounded-xl px-3.5 py-2 font-medium leading-relaxed">종료 기준: ${esc(t.check)}</p>` : ''}
+                            <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500">
+                                <span class="truncate">산출물 · <strong class="text-slate-800 font-semibold">${esc(t.deliverable || '-')}</strong></span>
+                                ${t.gapIssue ? `<span class="px-2 py-0.5 rounded bg-rose-50 text-rose-600 font-semibold flex-shrink-0">${esc(t.gapType)}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -3185,12 +3571,27 @@
             }).join("");
         }
 
+        function checkAutoFoldCompletedWeek(task) {
+            if (!task || task.category !== "project" || !task.week || task.status !== "done") return false;
+            const wk = Number(task.week);
+            const wkTasks = APP_STATE.tasks.filter(t => t.category === "project" && (t.projectId || "P1") === (task.projectId || "P1") && Number(t.week) === wk);
+            if (wkTasks.length > 0 && wkTasks.every(t => t.status === "done")) {
+                if (!APP_STATE.foldedWeeks) APP_STATE.foldedWeeks = {};
+                APP_STATE.foldedWeeks[wk] = true;
+                APP_STATE.foldedWeeks[wk + 1] = false;
+                return true;
+            }
+            return false;
+        }
+
         function toggleTaskDone(taskId) {
             const task = APP_STATE.tasks.find(t => t.id === taskId);
             if (!task) return;
             task.status = task.status === "done" ? "todo" : "done";
             if (task.subtasks) task.subtasks.forEach(s => { s.done = (task.status === "done"); });
-            saveState(true);
+            const autoFolded = checkAutoFoldCompletedWeek(task);
+            saveState(!autoFolded);
+            if (autoFolded) showToast(`${task.week}주차 일정이 모두 완료되어 자동으로 접었습니다! ${Number(task.week) + 1}주차 일정에 집중해 보세요.`);
         }
 
         function toggleSubtaskInline(taskId, subIdx) {
@@ -3914,16 +4315,242 @@ Script.complete();`;
             if (box) copyTextFallback(box.innerText, "Portfolio Markdown이 복사되었습니다.");
         }
 
-        function exportFullDatabaseJson() {
-            const blob = new Blob([JSON.stringify(APP_STATE, null, 2)], { type: "application/json" });
+        const SNAPSHOT_STORAGE_KEY = "PROJECT_OS_SNAPSHOTS_V1";
+        const LAST_BACKUP_TIME_KEY = "PROJECT_OS_LAST_BACKUP_TIME";
+
+        function getSnapshotsList() {
+            try {
+                const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+                const list = raw ? JSON.parse(raw) : [];
+                return Array.isArray(list) ? list : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveSnapshotsList(list) {
+            try {
+                localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(list.slice(0, 10)));
+            } catch (e) {
+                console.warn("Snapshot save skipped:", e);
+            }
+        }
+
+        function buildSnapshotMeta(label) {
+            const now = new Date();
+            const stamp = `${formatDateYMD(now)} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+            const total = (APP_STATE.tasks || []).length;
+            const done = (APP_STATE.tasks || []).filter(t => t.status === "done").length;
+            return {
+                id: "SNAP-" + Date.now(),
+                label: label || "수동 시점 보존",
+                time: stamp,
+                doneCount: done,
+                totalCount: total,
+                data: packState()
+            };
+        }
+
+        function createManualSnapshot(customLabel) {
+            const list = getSnapshotsList();
+            list.unshift(buildSnapshotMeta(customLabel || "사용자 시점 보존"));
+            saveSnapshotsList(list);
+            renderBackupStatusUI();
+            if (!customLabel) showToast("현재 상태를 내부 시점 보관함에 안전하게 보존했습니다.");
+        }
+
+        function autoSnapshotIfNeeded() {
+            const now = Date.now();
+            if (now - (window._lastAutoSnap || 0) < 300000) return; // 최대 5분에 1번 자동 시점 보존
+            window._lastAutoSnap = now;
+            const list = getSnapshotsList();
+            const snap = buildSnapshotMeta("자동 시점 보존");
+            if (list.length > 0 && list[0].label === "자동 시점 보존" && list[0].doneCount === snap.doneCount && list[0].totalCount === snap.totalCount) {
+                list[0] = snap;
+            } else {
+                list.unshift(snap);
+            }
+            saveSnapshotsList(list);
+        }
+
+        function applyRestoredStateObject(rawObj, sourceLabel) {
+            if (!rawObj || typeof rawObj !== "object") {
+                showToast("유효한 보존 문서 형식이 아닙니다.");
+                return false;
+            }
+            const candidate = rawObj.data && rawObj.data.tasks ? rawObj.data : rawObj;
+            const unpacked = unpackState(candidate);
+            if (!unpacked || !Array.isArray(unpacked.tasks)) {
+                showToast("보존 문서에 일정 자료(tasks)가 포함되어 있지 않습니다.");
+                return false;
+            }
+            // 복원 직전 현재 상태를 안전하게 시점 보존함에 백업
+            createManualSnapshot("복원 직전 자동 보존");
+
+            APP_STATE = Object.assign({}, APP_STATE, unpacked);
+            APP_STATE.schemaVer = SCHEMA_VER;
+            APP_STATE.updatedAt = Date.now();
+            ensureDefaults();
+            syncScheduledBlocksFromTasks();
+            saveState(false);
+            renderAll();
+            renderBackupStatusUI();
+            showToast(`${sourceLabel || "보존 문서"}에서 전체 일정(${APP_STATE.tasks.length}건)을 완벽히 복원했습니다!`);
+            return true;
+        }
+
+        function restoreSnapshotByIdx(idx) {
+            const list = getSnapshotsList();
+            const item = list[idx];
+            if (!item || !item.data) return;
+            applyRestoredStateObject(item.data, `'${item.time}' 시점 보존본`);
+        }
+
+        function downloadSnapshotByIdx(idx) {
+            const list = getSnapshotsList();
+            const item = list[idx];
+            if (!item || !item.data) return;
+            const fullData = unpackState(item.data);
+            const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `workspace_db_${formatDateYMD(new Date())}.json`;
+            a.download = `workspace_snapshot_${item.time.replace(/[:\s]/g, "-")}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            showToast("선택한 시점 보존본을 .json 문서로 내려받았습니다.");
+        }
+
+        function deleteSnapshotByIdx(idx) {
+            const list = getSnapshotsList();
+            list.splice(idx, 1);
+            saveSnapshotsList(list);
+            renderBackupStatusUI();
+            showToast("시점 보존 항목을 삭제했습니다.");
+        }
+
+        function exportFullDatabaseJson() {
+            syncScheduledBlocksFromTasks();
+            const now = new Date();
+            const pad = n => String(n).padStart(2, "0");
+            const timeTag = `${formatDateYMD(now)}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+            const stampStr = `${formatDateYMD(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            try { localStorage.setItem(LAST_BACKUP_TIME_KEY, stampStr); } catch (e) {}
+            createManualSnapshot("문서 내려받기 시점");
+
+            const exportPayload = Object.assign({}, APP_STATE, {
+                backupExportedAt: stampStr,
+                backupVersion: SCHEMA_VER
+            });
+            const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `workspace_backup_${timeTag}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            renderBackupStatusUI();
+            showToast(`전체 보존 문서(workspace_backup_${timeTag}.json)를 내려받았습니다.`);
+        }
+
+        function importBackupJsonFile(ev) {
+            const file = ev && ev.target && ev.target.files ? ev.target.files[0] : null;
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result || "{}");
+                    if (applyRestoredStateObject(parsed, file.name)) {
+                        closeBackupModal();
+                    }
+                } catch (err) {
+                    console.warn("Backup JSON parse error:", err);
+                    showToast("문서 형식이 올바른 JSON이 아닙니다. 다시 확인해 주세요.");
+                }
+            };
+            reader.readAsText(file);
+            ev.target.value = "";
+        }
+
+        function copyBackupStringToClipboard() {
+            syncScheduledBlocksFromTasks();
+            const str = JSON.stringify(packState());
+            const box = document.getElementById("backup-raw-json-box");
+            if (box) box.value = str;
+            copyTextFallback(str, "전체 자료 보존 문자열이 복사되었습니다! 메모장 등에 붙여넣어 보관하세요.");
+        }
+
+        function restoreFromBackupStringInput() {
+            const box = document.getElementById("backup-raw-json-box");
+            const raw = box ? box.value.trim() : "";
+            if (!raw) {
+                showToast("복원할 보존 문자열(JSON)을 입력 칸에 먼저 붙여넣어 주세요.");
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                if (applyRestoredStateObject(parsed, "붙여넣은 보존 문자열")) {
+                    box.value = "";
+                    closeBackupModal();
+                }
+            } catch (err) {
+                showToast("문자열 형식이 올바른 JSON이 아닙니다.");
+            }
+        }
+
+        function renderBackupStatusUI() {
+            const list = getSnapshotsList();
+            let lastTime = "";
+            try { lastTime = localStorage.getItem(LAST_BACKUP_TIME_KEY) || ""; } catch (e) {}
+
+            document.querySelectorAll(".backup-card-last-status").forEach(el => {
+                el.innerText = lastTime
+                    ? `마지막 문서 보존: ${lastTime} · 내부 시점 보존 ${list.length}개`
+                    : `내부 시점 보존 ${list.length}개 보관 중`;
+            });
+            const modalTimeEl = document.getElementById("backup-modal-last-time");
+            if (modalTimeEl) {
+                modalTimeEl.innerText = lastTime ? `마지막 내려받기: ${lastTime}` : "아직 내려받은 문서 없음";
+            }
+
+            const snapBox = document.getElementById("backup-snapshots-list");
+            if (snapBox) {
+                if (list.length === 0) {
+                    snapBox.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">보관된 시점 기록이 없습니다. [+ 지금 시점 보존]을 눌러 생성해 보세요.</p>`;
+                } else {
+                    snapBox.innerHTML = list.map((s, idx) => `
+                        <div class="bg-white rounded-xl p-3 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10.5px] font-semibold">${esc(s.label)}</span>
+                                    <strong class="text-xs text-slate-900 font-semibold">${esc(s.time)}</strong>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-0.5">전체 일정 ${s.totalCount}건 · 완료 ${s.doneCount}건</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="restoreSnapshotByIdx(${idx})" class="chip on" style="padding:4px 10px;font-size:11px">이 시점으로 복원</button>
+                                <button type="button" onclick="downloadSnapshotByIdx(${idx})" class="chip" style="padding:4px 9px;font-size:11px">문서 저장</button>
+                                <button type="button" onclick="deleteSnapshotByIdx(${idx})" class="text-slate-400 hover:text-rose-600 px-1.5 text-xs font-bold">×</button>
+                            </div>
+                        </div>
+                    `).join("");
+                }
+            }
+        }
+
+        function openBackupModal() {
+            renderBackupStatusUI();
+            const m = document.getElementById("backup-modal-backdrop");
+            if (m) m.classList.remove("hidden");
+        }
+
+        function closeBackupModal() {
+            const m = document.getElementById("backup-modal-backdrop");
+            if (m) m.classList.add("hidden");
         }
 
 
@@ -4171,7 +4798,7 @@ Script.complete();`;
             const subs = (t.subtasks || []).map((s, i) => `
                 <label class="flex items-start gap-2.5 text-[13px] text-slate-700 leading-relaxed cursor-pointer py-0.5">
                     <input type="checkbox" ${s.done ? "checked" : ""} onchange="toggleSubtaskInline('${t.id}',${i})" class="w-4 h-4 accent-blue-600 mt-1 flex-shrink-0 rounded">
-                    <span class="${s.done ? "line-through text-slate-400" : ""}">${esc(s.text)}</span>
+                    <span class="${s.done ? "line-through text-slate-400" : ""}">${formatProcedureTextHtml(s.text)}</span>
                 </label>`).join("");
             const slot = DAYLAY.get(t.id) || { s: 9, e: 9 + Number(t.estHours || 2) };
             return `<div draggable="true" ondragstart="onDragStartTask(event, '${t.id}')"
@@ -4194,6 +4821,7 @@ Script.complete();`;
                   <input type="time" value="${fmtT(slot.s)}" onchange="setStart('${t.id}', this.value)" class="dt" style="width:110px">
                   ${stepperHtml(t)}
                   ${t.start != null ? `<button type="button" onclick="setStart('${t.id}', '')" class="chip">자동 시각</button>` : ""}
+                  <button type="button" onclick="startFocusTimer('${t.id}')" class="chip chip-accent">▶ 집중 계측</button>
                   <button type="button" onclick="pushDay('${t.id}')" class="chip">내일로 →</button>
                 </div>`}
               </div></div>`;
@@ -5131,6 +5759,118 @@ Script.complete();`;
                 + dot("emerald", "Google 달력");
         }
 
+
+        // --- v13 SMART FEATURE 1: 실시간 집중 시간 계측기 (Focus Timer -> 상세 기록 & Portfolio 자동 누적) ---
+        let _focusState = { taskId: null, elapsedSec: 0, running: false, timerId: null };
+
+        function fmtClockHMS(sec) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            return [h, m, s].map(v => String(v).padStart(2, "0")).join(":");
+        }
+
+        function updateFocusTimerDom() {
+            const bar = document.getElementById("focus-timer-bar");
+            if (!bar) return;
+            if (!_focusState.taskId) {
+                bar.classList.add("hidden");
+                return;
+            }
+            bar.classList.remove("hidden");
+            const t = APP_STATE.tasks.find(x => x.id === _focusState.taskId);
+            const titleEl = document.getElementById("focus-timer-title");
+            const clockEl = document.getElementById("focus-timer-clock");
+            const pauseBtn = document.getElementById("focus-timer-pause-btn");
+            if (titleEl) titleEl.innerText = t ? t.title : _focusState.taskId;
+            if (clockEl) clockEl.innerText = fmtClockHMS(_focusState.elapsedSec);
+            if (pauseBtn) pauseBtn.innerText = _focusState.running ? "일시정지" : "계속 계측";
+        }
+
+        function startFocusTimer(taskId) {
+            const t = APP_STATE.tasks.find(x => x.id === taskId);
+            if (!t) return;
+            if (_focusState.timerId) clearInterval(_focusState.timerId);
+            if (_focusState.taskId !== taskId) {
+                _focusState.taskId = taskId;
+                _focusState.elapsedSec = 0;
+            }
+            _focusState.running = true;
+            if (t.status === "todo") t.status = "doing";
+            _focusState.timerId = setInterval(() => {
+                if (_focusState.running) {
+                    _focusState.elapsedSec++;
+                    updateFocusTimerDom();
+                }
+            }, 1000);
+            updateFocusTimerDom();
+            showToast(`'${t.title}' 집중 계측을 시작했습니다. 상단 막대에서 시간을 확인할 수 있습니다.`);
+        }
+
+        function togglePauseFocusTimer() {
+            if (!_focusState.taskId) return;
+            _focusState.running = !_focusState.running;
+            updateFocusTimerDom();
+        }
+
+        function finishFocusTimer(saveRecord) {
+            if (_focusState.timerId) clearInterval(_focusState.timerId);
+            const t = APP_STATE.tasks.find(x => x.id === _focusState.taskId);
+            const mins = Math.max(1, Math.round(_focusState.elapsedSec / 60));
+            if (saveRecord && t) {
+                const stamp = formatDateYMD(new Date());
+                const rec = `[${stamp} 집중 수행: ${mins}분]`;
+                t.notes = t.notes ? `${t.notes}\n${rec}` : rec;
+                t.actualMinutes = (Number(t.actualMinutes) || 0) + mins;
+                saveState(false);
+                showToast(`집중 시간(${mins}분)을 '${t.title}' 상세 기록과 Portfolio DB에 저장했습니다.`);
+            }
+            _focusState = { taskId: null, elapsedSec: 0, running: false, timerId: null };
+            updateFocusTimerDom();
+        }
+
+        // --- v13 SMART FEATURE 2: 시험·과제 D-3 / D-2 / D-1 대비 학습 일정 자동 분할 생성기 ---
+        function splitAcademicPrep(taskId) {
+            const t = APP_STATE.tasks.find(x => x.id === taskId);
+            if (!t || !t.date) return;
+            const totalH = Math.max(2, Number(t.estHours || 3));
+            const daysBefore = totalH >= 3 ? [3, 2, 1] : [2, 1];
+            const perSessionH = Math.max(1, Math.round((totalH / daysBefore.length) * 2) / 2);
+            let created = 0;
+            daysBefore.forEach((dMinus, idx) => {
+                const prepDate = shiftDate(t.date, -dMinus);
+                const prepId = `PREP-${t.id}-D${dMinus}`;
+                if (APP_STATE.tasks.some(x => x.id === prepId)) return;
+                APP_STATE.tasks.push({
+                    id: prepId,
+                    day: 0,
+                    week: 0,
+                    category: t.category,
+                    module: t.module || "전공",
+                    title: `[D-${dMinus} 대비 ${idx + 1}/${daysBefore.length}] ${t.title.replace(/^\[(시험|과제)\]\s*/, "")}`,
+                    deliverable: t.deliverable || "",
+                    estHours: perSessionH,
+                    status: "todo",
+                    date: prepDate,
+                    priority: "high",
+                    subtasks: (t.subtasks && t.subtasks.length)
+                        ? t.subtasks.map(s => ({ text: s.text, done: false }))
+                        : [{ text: `${t.module || ''} D-${dMinus} 핵심 범위 학습 및 문제 풀이`, done: false }],
+                    notes: `${t.date} 본 일정(${t.title}) 대비 분할 학습`,
+                    gapType: "none",
+                    gapIssue: "",
+                    gapSolution: ""
+                });
+                created++;
+            });
+            if (created > 0) {
+                saveState(false);
+                showToast(`마감 전 D-${daysBefore.join(", D-")} 대비 일정 ${created}건(각 ${perSessionH}h)을 달력과 시간표에 배정했습니다.`);
+            } else {
+                showToast("이미 해당 일정의 D-Day 대비 분할 일정이 생성되어 있습니다.");
+            }
+        }
+
         const RENDERERS = {
             today: () => { renderDayView(); renderOpt(); },
             calendar: () => {
@@ -5144,8 +5884,8 @@ Script.complete();`;
             },
             sop: () => { renderProjBar(); renderSopRoadmap(); renderSpecsTable(); renderProblemsMatrix(); },
             academic: () => { renderSubjectBar(); renderCatBar(); renderAcademicSeparatedView(); renderCatSections(); },
-            portfolio: renderPortfolioView,
-            dashboard: renderDashboard
+            portfolio: () => { renderPortfolioView(); renderBackupStatusUI(); },
+            dashboard: () => { renderDashboard(); renderBackupStatusUI(); }
         };
 
         addEventListener("pagehide", () => { if (docRef && window._dirty) docRef.set(packState()); });
@@ -5159,6 +5899,8 @@ Script.complete();`;
                 btnD.className = !mob ? "px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition-all" : "px-2 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all";
                 btnM.className = mob ? "px-2 py-1 rounded-md bg-white text-slate-900 shadow-2xs transition-all" : "px-2 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all";
             }
+            if (getSnapshotsList().length === 0) createManualSnapshot("최초 실행 자동 보존");
+            renderBackupStatusUI();
             switchView(mob ? "today" : "calendar");
             autoGcalSync(true);
         };
