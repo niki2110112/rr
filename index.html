@@ -515,6 +515,42 @@
             border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
         }
 
+
+        /* v15 Continuous Timetable Blocks & Bottom Resize Handle */
+        .tt-block-card {
+            transition: box-shadow 0.12s ease;
+        }
+        .tt-block-card:hover {
+            z-index: 25 !important;
+            box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.14), 0 0 0 1.5px var(--ios-blue) !important;
+        }
+        .tt-resize-handle {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 11px;
+            cursor: ns-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06));
+            border-radius: 0 0 10px 10px;
+            touch-action: none;
+        }
+        .tt-resize-handle::after {
+            content: "";
+            width: 26px;
+            height: 3.5px;
+            border-radius: 999px;
+            background: rgba(60, 60, 67, 0.35);
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+        .tt-resize-handle:hover::after {
+            background: var(--ios-blue);
+            transform: scaleX(1.2);
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-[14px] leading-relaxed selection:bg-blue-100 selection:text-blue-900">
@@ -2068,7 +2104,7 @@
         }
 
         // --- 자동화 및 스키마 마이그레이션 유틸 (기존 1~8주 자료를 상세 SOP로 100% 자동 업그레이드) ---
-        const SCHEMA_VER = 14;
+        const SCHEMA_VER = 15;
         const OLD_W = { "SOP-W03A": [15, 17], "SOP-W03B": [18, 21], "SOP-W04": [22, 28], "SOP-W05": [29, 35], "SOP-W06": [36, 42], "SOP-W07": [43, 49], "SOP-W08": [50, 56] };
         function todayDate() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 
@@ -2113,6 +2149,7 @@
                 }
             });
             APP_STATE.schemaVer = SCHEMA_VER;
+            APP_STATE.cascadeSop = false;
             try { localStorage.setItem("PROJECT_OS_V3_STATE", JSON.stringify(packState())); } catch (e) {}
             if (typeof _cloudReady !== "undefined" && _cloudReady && typeof docRef !== "undefined" && docRef) {
                 try { pushCloud(); } catch (e) {}
@@ -2363,7 +2400,7 @@
             weekendCapHours: 6,
             avoidGcalAndLectures: true,
             dayStart: 9,
-            cascadeSop: true,
+            cascadeSop: false,
             showLectures: false,
             gcalLayers: { task: true, assignment: true, exam: true },
             gcalBridgeUrl: "",
@@ -2839,26 +2876,28 @@
             ev.currentTarget.classList.remove("drag-over-cell");
         }
 
-        function moveTaskToDate(taskId, newDateStr) {
+        function moveTaskToDate(taskId, newDateStr, allowCascade = false) {
             const task = APP_STATE.tasks.find(t => t.id === taskId);
             if (!task) return;
 
             const oldDateStr = task.date;
             task.date = newDateStr;
-
-            // If Cascade SOP mode is enabled and this is a project SOP task, shift subsequent incomplete SOP tasks in the same/later week
-            if (APP_STATE.cascadeSop && oldDateStr && task.id.startsWith("SOP-") && task.day > 0) {
-                const oldD = new Date(oldDateStr);
-                const newD = new Date(newDateStr);
-                const diffDays = Math.round((newD - oldD) / (1000 * 60 * 60 * 24));
-                if (diffDays !== 0) {
-                    APP_STATE.tasks.forEach(other => {
-                        if (other.id !== task.id && other.id.startsWith("SOP-") && other.status !== "done" && other.day > task.day && other.date) {
-                            const od = new Date(other.date);
-                            od.setDate(od.getDate() + diffDays);
-                            other.date = formatDateYMD(od);
-                        }
-                    });
+            // Pin manually moved tasks so they stay on the user's chosen day unless explicitly re-optimized
+            if (newDateStr && oldDateStr !== newDateStr) {
+                // Only cascade if allowCascade is true AND user explicitly enabled cascadeSop
+                if (allowCascade && APP_STATE.cascadeSop && oldDateStr && task.id.startsWith("SOP-") && task.day > 0) {
+                    const oldD = new Date(oldDateStr + "T00:00:00");
+                    const newD = new Date(newDateStr + "T00:00:00");
+                    const diffDays = Math.round((newD - oldD) / (1000 * 60 * 60 * 24));
+                    if (diffDays !== 0) {
+                        APP_STATE.tasks.forEach(other => {
+                            if (other.id !== task.id && other.id.startsWith("SOP-") && other.status !== "done" && other.day > task.day && other.date) {
+                                const od = new Date(other.date + "T00:00:00");
+                                od.setDate(od.getDate() + diffDays);
+                                other.date = formatDateYMD(od);
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -2893,7 +2932,7 @@
             return formatDateYMD(d);
         }
 
-        // Automatically synchronize APP_STATE.scheduledBlocks from APP_STATE.tasks + layoutDay
+        // Automatically synchronize APP_STATE.scheduledBlocks from APP_STATE.tasks + layoutDay (exact fractional hours!)
         function syncScheduledBlocksFromTasks() {
             const byDate = new Map();
             (APP_STATE.tasks || []).forEach(t => {
@@ -2910,17 +2949,17 @@
                 const dayIdx = (dObj.getDay() + 6) % 7;
                 const wk = getMondayStrForDate(ds);
                 dayTasks.forEach(t => {
-                    const slot = lay.get(t.id) || { s: Number(APP_STATE.dayStart ?? 9), e: Number(APP_STATE.dayStart ?? 9) + Number(t.estHours || 2) };
-                    const sHour = Math.max(6, Math.min(23, Math.floor(slot.s)));
-                    const dur = Math.max(1, Math.ceil(slot.e - slot.s));
+                    const durExact = Math.max(0.5, Number(t.estHours || 2));
+                    const slot = lay.get(t.id) || { s: Number(APP_STATE.dayStart ?? 9), e: Number(APP_STATE.dayStart ?? 9) + durExact };
+                    const sExact = Math.max(6, Math.min(23.5, Number(slot.s)));
                     newBlocks.push({
                         id: "BLK-" + t.id,
                         taskId: t.id,
                         title: t.title,
                         category: t.category || "project",
                         dayIdx: dayIdx,
-                        startHour: sHour,
-                        duration: dur,
+                        startHour: sExact,
+                        duration: durExact,
                         weekKey: wk,
                         date: ds
                     });
@@ -2928,6 +2967,36 @@
             });
             APP_STATE.scheduledBlocks = newBlocks;
         }
+
+        // Compute side-by-side column indices for overlapping blocks on the same day
+        function computeOverlapColumns(blocks) {
+            const sorted = blocks.slice().sort((a, b) => a.startHour - b.startHour || b.duration - a.duration);
+            const colEnd = [];
+            const meta = new Map();
+            sorted.forEach(b => {
+                let col = colEnd.findIndex(endH => endH <= b.startHour + 0.01);
+                if (col === -1) {
+                    col = colEnd.length;
+                    colEnd.push(b.startHour + b.duration);
+                } else {
+                    colEnd[col] = b.startHour + b.duration;
+                }
+                meta.set(b.id, { col, totalCols: 1 });
+            });
+            sorted.forEach(b => {
+                const m = meta.get(b.id);
+                let maxCol = m.col + 1;
+                sorted.forEach(other => {
+                    if (other.id !== b.id && b.startHour < other.startHour + other.duration - 0.01 && b.startHour + b.duration > other.startHour + 0.01) {
+                        maxCol = Math.max(maxCol, meta.get(other.id).col + 1);
+                    }
+                });
+                m.totalCols = maxCol;
+            });
+            return meta;
+        }
+
+        const WEEK_HOUR_PX = 56; // 56px per hour for crisp readability and 0.5h (28px) resize precision
 
         function renderWeeklyView() {
             const gridWrapper = document.getElementById("weekly-grid-wrapper");
@@ -2939,7 +3008,7 @@
             const sun = new Date(mon);
             sun.setDate(mon.getDate() + 6);
             const rangeLbl = document.getElementById("weekly-range-label");
-            if (rangeLbl) rangeLbl.innerText = `${formatDateYMD(mon)} (월) ~ ${formatDateYMD(sun)} (일)`;
+            if (rangeLbl) rangeLbl.innerText = `${formatDateYMD(mon)} (월) ~ ${formatDateYMD(sun)} (일) · 블록을 끌어서 이동하거나 하단 모서리를 끌어 시간(h) 조절`;
 
             const dayNames = ["월", "화", "수", "목", "금", "토", "일"];
             const todayStr = formatDateYMD(todayDate());
@@ -2954,28 +3023,36 @@
             const weekBlocks = APP_STATE.scheduledBlocks.filter(b => b.weekKey === wk);
             const layers = APP_STATE.gcalLayers || { task: true, assignment: true, exam: true };
 
-            // Determine dynamic hour range (default 8..22, expanding if tasks are earlier/later)
             let minH = 8, maxH = 22;
             weekBlocks.forEach(b => {
-                minH = Math.min(minH, b.startHour);
-                maxH = Math.max(maxH, Math.min(24, b.startHour + b.duration));
+                minH = Math.min(minH, Math.floor(b.startHour));
+                maxH = Math.max(maxH, Math.min(24, Math.ceil(b.startHour + b.duration)));
             });
+            if (APP_STATE.showLectures) {
+                (APP_STATE.lectures || LECTURE_SCHEDULE).forEach(l => {
+                    minH = Math.min(minH, Math.floor(l.startHour));
+                    maxH = Math.max(maxH, Math.ceil(l.startHour + l.duration));
+                });
+            }
+            const totalHours = Math.max(12, maxH - minH + 1);
+            const colHeightPx = totalHours * WEEK_HOUR_PX;
 
             let header = `<div class="grid grid-cols-8 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <div class="p-2.5 text-center border-r border-slate-100">시간</div>`;
+                <div class="p-2.5 text-center border-r border-slate-100 flex items-center justify-center">시간</div>`;
             for (let d = 0; d < 7; d++) {
                 const cur = new Date(mon);
                 cur.setDate(mon.getDate() + d);
                 const ds = weekDates[d];
                 const isToday = ds === todayStr;
+                const avail = getDayAvailability(ds);
                 const dayTasks = APP_STATE.tasks.filter(t => t.date === ds && t.status !== "done");
                 const dayHrs = dayTasks.reduce((s, t) => s + Number(t.estHours || 0), 0);
-                header += `<div onclick="goDay('${ds}')" class="p-2 text-center border-r border-slate-100 last:border-r-0 cursor-pointer hover:bg-blue-50/40 transition-colors ${isToday ? 'bg-blue-50/60' : ''}" title="누르면 해당 날짜의 오늘(일간) 시간표로 이동합니다">
+                header += `<div onclick="goDay('${ds}')" class="p-2.5 text-center border-r border-slate-100 last:border-r-0 cursor-pointer hover:bg-blue-50/40 transition-colors ${isToday ? 'bg-blue-50/60' : ''}" title="누르면 해당 날짜의 오늘(일간) 시간표로 이동합니다">
                     <div>
                         <span class="${isToday ? 'text-blue-600 font-bold' : 'text-slate-900'}">${dayNames[d]}</span>
                         <span class="text-[11px] ${isToday ? 'text-blue-600 font-bold' : 'text-slate-400'} ml-0.5">${cur.getMonth() + 1}/${cur.getDate()}</span>
                     </div>
-                    ${dayHrs > 0 ? `<div class="text-[10px] font-medium ${dayHrs > (APP_STATE.dailyCapHours || 4) ? 'text-rose-600' : 'text-blue-600'} mt-0.5">${dayHrs}h</div>` : ''}
+                    <div class="text-[10.5px] font-medium ${dayHrs > avail.effectiveCap ? 'text-rose-600 font-bold' : (dayHrs > 0 ? 'text-blue-600' : 'text-slate-400')} mt-0.5">${dayHrs}h / ${avail.effectiveCap}h</div>
                 </div>`;
             }
             header += `</div>`;
@@ -2985,64 +3062,129 @@
                 (APP_STATE.gcalEvents || []).filter(ev => ev.date === ds && ((ev.layer === "exam" && layers.exam) || (ev.layer === "task" && layers.task) || (ev.layer === "assignment" && layers.assignment)))
             );
             if (weekGcalByDay.some(arr => arr.length > 0)) {
-                header += `<div class="grid grid-cols-8 border-b border-slate-200 bg-emerald-50/30 text-[10px]">
+                header += `<div class="grid grid-cols-8 border-b border-slate-200 bg-emerald-50/30 text-[11px]">
                     <div class="p-1.5 text-center font-semibold text-emerald-700 border-r border-slate-100 flex items-center justify-center">Google</div>`;
                 for (let d = 0; d < 7; d++) {
-                    header += `<div class="p-1 border-r border-slate-100 last:border-r-0 space-y-1">
-                        ${weekGcalByDay[d].map(ev => `<div class="px-1.5 py-0.5 rounded bg-emerald-100/80 text-emerald-900 font-medium truncate" title="${esc(ev.title)}">${esc(ev.title)}</div>`).join("")}
+                    header += `<div class="p-1.5 border-r border-slate-100 last:border-r-0 space-y-1">
+                        ${weekGcalByDay[d].map(ev => `<div class="px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-900 font-medium truncate" title="${esc(ev.title)}">${esc(ev.title)}</div>`).join("")}
                     </div>`;
                 }
                 header += `</div>`;
             }
 
-            let rows = "";
-            for (let hour = minH; hour <= maxH; hour++) {
+            // Left Time Axis Column
+            let timeAxisCells = "";
+            for (let hour = minH; hour < minH + totalHours; hour++) {
                 const tStr = `${String(hour).padStart(2, "0")}:00`;
-                rows += `<div class="grid grid-cols-8 border-b border-slate-100 min-h-[48px]">
-                    <div class="p-2 text-[11px] font-semibold text-slate-400 text-center border-r border-slate-100 bg-slate-50/40">${tStr}</div>`;
-
-                for (let d = 0; d < 7; d++) {
-                    const ds = weekDates[d];
-                    const lecture = APP_STATE.showLectures
-                        ? (APP_STATE.lectures || LECTURE_SCHEDULE).find(l => l.dayIdx === d && hour >= Math.floor(l.startHour) && hour < Math.ceil(l.startHour + l.duration))
-                        : null;
-                    const matchingBlocks = weekBlocks.filter(b => b.dayIdx === d && hour >= b.startHour && hour < b.startHour + b.duration);
-
-                    if (matchingBlocks.length > 0) {
-                        const cellsHtml = matchingBlocks.map(block => {
-                            const linked = APP_STATE.tasks.find(t => t.id === block.taskId);
-                            const isDone = linked && linked.status === "done";
-                            const cat = linked ? catKey(linked) : (block.category || "project");
-                            const st = getCategoryStyle(cat, isDone);
-                            const isStart = hour === block.startHour;
-                            return `
-                                <div draggable="true" ondragstart="onDragStartBlock(event, '${block.id}')"
-                                     onclick="event.stopPropagation(); openNoteDrawer('${block.taskId}')"
-                                     class="p-1 rounded-lg border cursor-grab active:cursor-grabbing flex flex-col justify-between ${st.pill}">
-                                    ${isStart ? `
-                                        <div class="flex justify-between items-start gap-1">
-                                            <span class="text-[10.5px] font-semibold leading-tight line-clamp-2">${esc(block.title)}</span>
-                                            <button type="button" onclick="event.stopPropagation(); removeScheduledBlock('${block.id}')" class="text-[11px] opacity-60 hover:opacity-100 px-1 flex-shrink-0" title="일정 배정 해제(보관함으로 이동)">×</button>
-                                        </div>
-                                        <span class="text-[9.5px] opacity-70 mt-0.5">${String(block.startHour).padStart(2, '0')}:00 · ${linked ? linked.estHours : block.duration}h</span>
-                                    ` : `<span class="text-[10px] opacity-65 truncate">↳ ${esc(block.title)}</span>`}
-                                </div>
-                            `;
-                        }).join("");
-                        rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
-                                      class="p-1 border-r border-slate-100 space-y-1 ${ds === todayStr ? 'bg-blue-50/15' : ''}">${cellsHtml}</div>`;
-                    } else if (lecture) {
-                        rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
-                                      class="p-1.5 border-r border-slate-100 bg-slate-100/80 text-slate-500 text-[11px] font-medium flex items-center">${hour === Math.floor(lecture.startHour) ? `${esc(lecture.title)} (${esc(lecture.room || '')})` : ''}</div>`;
-                    } else {
-                        rows += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
-                                      onclick="clickEmptySlot(${d}, ${hour})"
-                                      class="p-1 border-r border-slate-100 hover:bg-blue-50/40 transition-colors cursor-pointer ${ds === todayStr ? 'bg-blue-50/15' : ''}"></div>`;
-                    }
-                }
-                rows += `</div>`;
+                timeAxisCells += `<div class="border-b border-slate-100 pr-2 pt-1 text-[11px] font-semibold text-slate-400 text-right select-none" style="height:${WEEK_HOUR_PX}px">${tStr}</div>`;
             }
-            gridWrapper.innerHTML = header + rows;
+
+            // 7 Continuous Day Columns (Each block spans its full duration height continuously without `↳` arrows!)
+            let dayColsHtml = "";
+            for (let d = 0; d < 7; d++) {
+                const ds = weekDates[d];
+                const isToday = ds === todayStr;
+
+                // Background hour drop slots for day `d`
+                let bgSlots = "";
+                for (let hour = minH; hour < minH + totalHours; hour++) {
+                    bgSlots += `<div ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToSlot(event, ${d}, ${hour})"
+                                     onclick="clickEmptySlot(${d}, ${hour})"
+                                     class="border-b border-slate-100 hover:bg-blue-50/35 transition-colors cursor-pointer"
+                                     style="height:${WEEK_HOUR_PX}px" title="${ds.slice(5)} ${String(hour).padStart(2, '0')}:00에 배정"></div>`;
+                }
+
+                // Optional Lecture background blocks
+                const dayLecs = APP_STATE.showLectures
+                    ? (APP_STATE.lectures || LECTURE_SCHEDULE).filter(l => l.dayIdx === d)
+                    : [];
+                const lecHtml = dayLecs.map(l => {
+                    const topPx = (l.startHour - minH) * WEEK_HOUR_PX + 1;
+                    const hPx = Math.max(24, l.duration * WEEK_HOUR_PX - 2);
+                    return `<div class="absolute left-1 right-1 rounded-xl px-2 py-1 text-[11px] text-slate-500 overflow-hidden pointer-events-none"
+                                 style="top:${topPx}px;height:${hPx}px;background:rgba(118,118,128,.13);z-index:2">
+                                <b class="font-semibold block truncate">${esc(l.title)}</b>
+                                <span class="text-[10px] opacity-80">${fmtT(l.startHour)}–${fmtT(l.startHour + l.duration)}</span>
+                            </div>`;
+                }).join("");
+
+                // Timed Google Calendar blocks on this day
+                const gcalTimed = (APP_STATE.gcalEvents || [])
+                    .filter(ev => ev.date === ds && ((ev.layer === "exam" && layers.exam) || (ev.layer === "task" && layers.task) || (ev.layer === "assignment" && layers.assignment)))
+                    .map(ev => ({ ev, slot: parseGcalTimeSlot(ev) }))
+                    .filter(x => x.slot && x.slot.s != null);
+                const gcalHtml = gcalTimed.map(({ ev, slot }) => {
+                    const topPx = (slot.s - minH) * WEEK_HOUR_PX + 1;
+                    const hPx = Math.max(26, (slot.e - slot.s) * WEEK_HOUR_PX - 2);
+                    return `<div class="absolute left-1 right-1 rounded-xl border border-emerald-300 bg-emerald-50/90 text-emerald-900 px-2 py-1 text-[11px] overflow-hidden pointer-events-none"
+                                 style="top:${topPx}px;height:${hPx}px;z-index:3">
+                                <b class="font-semibold block truncate">Google · ${esc(ev.title)}</b>
+                                <span class="text-[10px] opacity-75">${fmtT(slot.s)}–${fmtT(slot.e)}</span>
+                            </div>`;
+                }).join("");
+
+                // Task Blocks for day `d` (Single continuous card per task + bottom resize handle!)
+                const dayBlocks = weekBlocks.filter(b => b.dayIdx === d);
+                const overlapMeta = computeOverlapColumns(dayBlocks);
+
+                const blocksHtml = dayBlocks.map(block => {
+                    const linked = APP_STATE.tasks.find(t => t.id === block.taskId);
+                    const isDone = linked && linked.status === "done";
+                    const cat = linked ? catKey(linked) : (block.category || "project");
+                    const st = getCategoryStyle(cat, isDone);
+                    const dur = Number(linked ? linked.estHours : block.duration) || 2;
+                    const sHr = Number(block.startHour);
+                    const eHr = sHr + dur;
+                    const topPx = (sHr - minH) * WEEK_HOUR_PX + 2;
+                    const heightPx = Math.max(30, dur * WEEK_HOUR_PX - 4);
+                    const colInfo = overlapMeta.get(block.id) || { col: 0, totalCols: 1 };
+                    const widthPct = 100 / colInfo.totalCols;
+                    const leftPct = colInfo.col * widthPct;
+
+                    return `
+                        <div draggable="true"
+                             ondragstart="onDragStartBlock(event, '${block.id}')"
+                             onclick="if(!window._justResizedOrMoved) openNoteDrawer('${block.taskId}')"
+                             data-task-id="${block.taskId}"
+                             data-min-h="${minH}"
+                             style="top:${topPx}px;height:${heightPx}px;left:calc(${leftPct}% + 3px);width:calc(${widthPct}% - 6px);z-index:10"
+                             class="tt-block-card absolute rounded-xl border px-2.5 pt-1.5 pb-3 cursor-grab active:cursor-grabbing flex flex-col justify-between overflow-hidden select-none shadow-2xs ${st.pill}">
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="flex justify-between items-start gap-1">
+                                    <span class="text-[11.5px] font-semibold leading-snug ${heightPx >= 75 ? 'line-clamp-3' : 'line-clamp-2'}">${esc(block.title)}</span>
+                                    <button type="button" onclick="event.stopPropagation(); removeScheduledBlock('${block.id}')" class="text-xs opacity-60 hover:opacity-100 px-1 -mr-1 -mt-0.5 flex-shrink-0" title="고정 해제 또는 보관함으로 이동">×</button>
+                                </div>
+                                <div class="tt-dur-label text-[10.5px] font-medium opacity-80">${fmtT(sHr)}–${fmtT(eHr)} (${dur}h)</div>
+                                ${heightPx >= 95 && linked && linked.deliverable ? `<div class="text-[10px] opacity-70 truncate pt-0.5">${esc(linked.deliverable)}</div>` : ""}
+                            </div>
+                            <div class="tt-resize-handle"
+                                 draggable="false"
+                                 onmousedown="startResizeBlock(event, '${block.taskId}', ${WEEK_HOUR_PX})"
+                                 ontouchstart="startResizeBlock(event, '${block.taskId}', ${WEEK_HOUR_PX})"
+                                 onclick="event.stopPropagation()"
+                                 title="위아래로 끌어서 소요 시간(h) 조절"></div>
+                        </div>
+                    `;
+                }).join("");
+
+                dayColsHtml += `
+                    <div class="relative border-r border-slate-100 last:border-r-0 ${isToday ? 'bg-blue-50/15' : 'bg-white'}"
+                         data-day-idx="${d}"
+                         style="height:${colHeightPx}px">
+                        ${bgSlots}
+                        ${lecHtml}
+                        ${gcalHtml}
+                        ${blocksHtml}
+                    </div>
+                `;
+            }
+
+            gridWrapper.innerHTML = header + `
+                <div class="grid grid-cols-8 relative">
+                    <div class="bg-slate-50/50 border-r border-slate-100" style="height:${colHeightPx}px">${timeAxisCells}</div>
+                    ${dayColsHtml}
+                </div>
+            `;
         }
 
         function onDragStartBlock(ev, blockId) {
@@ -3081,12 +3223,16 @@
             const task = APP_STATE.tasks.find(t => t.id === taskId);
             if (!task) return;
 
-            moveTaskToDate(task.id, targetDateStr);
-            task.start = hour;
+            let exactHour = Number(hour);
+            if (ev.offsetY !== undefined && ev.currentTarget && ev.currentTarget.clientHeight > 20) {
+                if (ev.offsetY > ev.currentTarget.clientHeight * 0.55) exactHour += 0.5;
+            }
+            moveTaskToDate(task.id, targetDateStr, false);
+            task.start = exactHour;
             uiState.draggedTaskId = null;
             uiState.draggedBlockId = null;
             saveState(false);
-            showToast(`${targetDateStr.slice(5)} ${String(hour).padStart(2, "0")}:00에 배정되었습니다.`);
+            showToast(`${targetDateStr.slice(5)} ${fmtT(exactHour)} (${task.estHours}h)에 배정되었습니다. (다른 요일 일정은 고정 유지)`);
         }
 
         function dropToBacklog(ev) {
@@ -4389,6 +4535,7 @@ Script.complete();`;
 
             APP_STATE = Object.assign({}, APP_STATE, unpacked);
             APP_STATE.schemaVer = SCHEMA_VER;
+            APP_STATE.cascadeSop = false;
             APP_STATE.updatedAt = Date.now();
             ensureDefaults();
             syncScheduledBlocksFromTasks();
@@ -4739,6 +4886,71 @@ Script.complete();`;
         }
 
         // Touch / Pointer drag support on Today's timetable blocks (works on both iPhone touchscreen and Desktop mouse!)
+        // Drag bottom edge of any timetable block (Weekly or Today) to resize duration (estHours) in 0.5h steps!
+        let _resizeState = null;
+        function getClientY(ev) {
+            return ev.touches && ev.touches.length ? ev.touches[0].clientY : (ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0].clientY : ev.clientY);
+        }
+        function startResizeBlock(ev, taskId, hourPx) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            const t = APP_STATE.tasks.find(x => x.id === taskId);
+            if (!t) return;
+            const cardEl = ev.currentTarget.closest(".tt-block-card");
+            if (!cardEl) return;
+            const blk = APP_STATE.scheduledBlocks.find(b => b.taskId === taskId);
+            const sHr = t.start != null ? Number(t.start) : (blk ? blk.startHour : 9);
+            const origDur = Math.max(0.5, Number(t.estHours || 2));
+            _resizeState = {
+                taskId,
+                hourPx: hourPx || 56,
+                startY: getClientY(ev),
+                sHr,
+                origDur,
+                curDur: origDur,
+                cardEl
+            };
+            window.addEventListener("mousemove", moveResizeBlock, { passive: false });
+            window.addEventListener("mouseup", endResizeBlock);
+            window.addEventListener("touchmove", moveResizeBlock, { passive: false });
+            window.addEventListener("touchend", endResizeBlock);
+        }
+        function moveResizeBlock(ev) {
+            if (!_resizeState) return;
+            ev.preventDefault();
+            const dy = getClientY(ev) - _resizeState.startY;
+            const deltaHalfHours = Math.round((dy / _resizeState.hourPx) * 2) / 2;
+            const nextDur = Math.max(0.5, Math.min(12, _resizeState.origDur + deltaHalfHours));
+            _resizeState.curDur = nextDur;
+            _resizeState.cardEl.style.height = Math.max(28, nextDur * _resizeState.hourPx - 4) + "px";
+            _resizeState.cardEl.style.zIndex = "40";
+            const lbl = _resizeState.cardEl.querySelector(".tt-dur-label");
+            if (lbl) {
+                lbl.innerText = `${fmtT(_resizeState.sHr)}–${fmtT(_resizeState.sHr + nextDur)} (${nextDur}h)`;
+            }
+        }
+        function endResizeBlock() {
+            if (!_resizeState) return;
+            const st = _resizeState;
+            _resizeState = null;
+            window.removeEventListener("mousemove", moveResizeBlock);
+            window.removeEventListener("mouseup", endResizeBlock);
+            window.removeEventListener("touchmove", moveResizeBlock);
+            window.removeEventListener("touchend", endResizeBlock);
+            window._justResizedOrMoved = true;
+            setTimeout(() => { window._justResizedOrMoved = false; }, 150);
+
+            const t = APP_STATE.tasks.find(x => x.id === st.taskId);
+            if (t && st.curDur !== st.origDur) {
+                t.estHours = st.curDur;
+                if (t.start == null) t.start = st.sHr;
+                saveState(false);
+                showToast(`'${t.title}' 소요 시간을 ${st.curDur}h(${fmtT(st.sHr)}–${fmtT(st.sHr + st.curDur)})로 조절했습니다.`);
+            } else {
+                renderAll();
+            }
+        }
+
         let _ttDrag = null;
         function startTouchDragToday(ev, taskId) {
             if (ev.button !== undefined && ev.button !== 0) return;
@@ -4952,12 +5164,19 @@ Script.complete();`;
                              onpointerup="endTouchDragToday(event)"
                              data-lo="${lo}"
                              style="left:56px;right:6px;top:${top(v.s) + 2}px;height:${Math.max(38, (v.e - v.s) * H - 4)}px;touch-action:none"
-                             class="absolute rounded-xl border px-3.5 py-2 text-[12.5px] leading-snug overflow-hidden cursor-grab active:cursor-grabbing select-none shadow-2xs flex items-center justify-between gap-2.5 ${st.pill}">
+                             class="tt-block-card absolute rounded-xl border px-3.5 pt-2 pb-3.5 text-[12.5px] leading-snug overflow-hidden cursor-grab active:cursor-grabbing select-none shadow-2xs flex items-start justify-between gap-2.5 ${st.pill}">
                             <div class="min-w-0 flex-1 space-y-0.5">
-                                <span class="font-semibold truncate block">${esc(t.title)}</span>
-                                <span class="tt-time-lbl text-[11px] opacity-80 block">${fmtT(v.s)} – ${fmtT(v.e)} (${t.estHours}h)</span>
+                                <span class="font-semibold block ${ (v.e - v.s) * H >= 76 ? 'line-clamp-2' : 'truncate' }">${esc(t.title)}</span>
+                                <span class="tt-time-lbl tt-dur-label text-[11px] opacity-80 block">${fmtT(v.s)} – ${fmtT(v.e)} (${t.estHours}h)</span>
                             </div>
                             <span class="text-xs opacity-50 px-1 flex-shrink-0">⋮⋮</span>
+                            <div class="tt-resize-handle"
+                                 draggable="false"
+                                 onmousedown="startResizeBlock(event, '${t.id}', ${H})"
+                                 ontouchstart="startResizeBlock(event, '${t.id}', ${H})"
+                                 onpointerdown="event.stopPropagation()"
+                                 onclick="event.stopPropagation()"
+                                 title="위아래로 끌어서 소요 시간(h) 조절"></div>
                         </div>`;
             }).join("");
             const now = new Date(), nowLine = ds === formatDateYMD(todayDate()) ? `<div class="absolute pointer-events-none" style="left:52px;right:0;top:${top(now.getHours() + now.getMinutes() / 60)}px;border-top:1.5px solid #ff3b30"></div>` : "";
